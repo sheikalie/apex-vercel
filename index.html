@@ -839,6 +839,85 @@ function buildSectionCards(sections) {
   });
 }
 
+// ── LIVE QUOTE FETCHER ───────────────────────────────────────────────────────
+async function fetchQuote(ticker) {
+  try {
+    const r = await fetch('/api/quote?ticker=' + ticker);
+    const d = await r.json();
+    return d.error ? null : d;
+  } catch (_) { return null; }
+}
+
+function renderQuoteBanner(q) {
+  const banner = document.getElementById('quote-banner');
+  const inner  = document.getElementById('quote-inner');
+  if (!q) { banner.style.display = 'none'; return; }
+
+  const up   = parseFloat(q.changePct) >= 0;
+  const flat = q.changePct === null || q.changePct === undefined;
+  const changeClass = flat ? 'flat' : (up ? 'up' : 'down');
+  const changeSign  = flat ? '' : (up ? '+' : '');
+  const arrow       = flat ? '–' : (up ? '▲' : '▼');
+
+  const stats = [
+    { label: 'Open',      value: q.open      ? '$' + q.open      : '–' },
+    { label: 'High',      value: q.high      ? '$' + q.high      : '–' },
+    { label: 'Low',       value: q.low       ? '$' + q.low       : '–' },
+    { label: '52W High',  value: q.week52High ? '$' + q.week52High : '–' },
+    { label: '52W Low',   value: q.week52Low  ? '$' + q.week52Low  : '–' },
+    { label: 'Mkt Cap',   value: q.marketCap  || '–' },
+    { label: 'P/E',       value: q.pe         || '–' },
+    { label: 'Volume',    value: q.volume     || '–' },
+  ].filter(s => s.value !== '–');
+
+  inner.innerHTML =
+    '<div class="quote-ticker-name">' +
+      '<div class="quote-symbol">' + q.ticker + '</div>' +
+      '<div class="quote-name">' + (q.name || '') + '</div>' +
+    '</div>' +
+    '<div class="quote-price">$' + (q.price || '–') + '</div>' +
+    '<div class="quote-change ' + changeClass + '">' +
+      arrow + ' ' + changeSign + (q.change || '0') +
+      ' (' + changeSign + (q.changePct || '0') + '%)' +
+    '</div>' +
+    '<div class="quote-stats">' +
+      stats.map(s =>
+        '<div class="quote-stat">' +
+          '<span class="quote-stat-label">' + s.label + '</span>' +
+          '<span class="quote-stat-value">' + s.value + '</span>' +
+        '</div>'
+      ).join('') +
+    '</div>' +
+    '<div class="quote-live-dot" title="Live market data"></div>';
+
+  banner.style.display = 'block';
+}
+
+function buildLivePrompt(ticker, quote) {
+  const base = buildPrompt(ticker);
+  if (!quote) return base;
+
+  const mktState = quote.marketState === 'REGULAR' ? 'Market is OPEN' :
+                   quote.marketState === 'PRE'     ? 'Pre-market session' :
+                   quote.marketState === 'POST'    ? 'After-hours session' : '';
+
+  const liveData =
+    '**LIVE MARKET DATA (as of ' + new Date().toUTCString() + '):**\n' +
+    '- Current Price: $' + quote.price + ' ' + (mktState ? '(' + mktState + ')' : '') + '\n' +
+    (quote.change    ? '- Change Today: ' + (parseFloat(quote.change) >= 0 ? '+' : '') + quote.change + ' (' + quote.changePct + '%)\n' : '') +
+    (quote.open      ? '- Open: $'       + quote.open      + '\n' : '') +
+    (quote.high      ? '- Day High: $'   + quote.high      + '\n' : '') +
+    (quote.low       ? '- Day Low: $'    + quote.low       + '\n' : '') +
+    (quote.week52High? '- 52W High: $'   + quote.week52High + '\n' : '') +
+    (quote.week52Low ? '- 52W Low: $'    + quote.week52Low  + '\n' : '') +
+    (quote.marketCap ? '- Market Cap: '  + quote.marketCap  + '\n' : '') +
+    (quote.pe        ? '- P/E (TTM): '   + quote.pe         + '\n' : '') +
+    (quote.volume    ? '- Volume: '      + quote.volume     + '\n' : '') +
+    '\nUse these LIVE prices in your analysis. Do NOT use outdated training data for current price or valuation metrics.\n\n';
+
+  return liveData + base;
+}
+
 // ── MAIN ANALYSIS ─────────────────────────────────────────────────────────────
 async function runAnalysis() {
   const raw = document.getElementById('ticker-input').value.trim().toUpperCase();
@@ -849,9 +928,19 @@ async function runAnalysis() {
 
   const btn = document.getElementById('analyze-btn');
   btn.disabled = true;
-  btn.textContent = 'Analyzing...';
+  btn.textContent = 'Fetching live data...';
   document.getElementById('loading-ticker').textContent = raw;
+  document.getElementById('quote-banner').style.display = 'none';
   setState('loading');
+
+  // Step 1: fetch live quote in parallel with starting the loading UI
+  let quote = null;
+  try {
+    quote = await fetchQuote(raw);
+    if (quote) renderQuoteBanner(quote);
+  } catch (_) { /* quote failure never blocks analysis */ }
+
+  btn.textContent = 'Analyzing...';
 
   try {
     const response = await fetch('/api/analyze', {
@@ -860,7 +949,7 @@ async function runAnalysis() {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 4000,
-        messages: [{ role: 'user', content: buildPrompt(raw) }]
+        messages: [{ role: 'user', content: buildLivePrompt(raw, quote) }]
       })
     });
 
