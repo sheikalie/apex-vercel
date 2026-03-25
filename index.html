@@ -909,19 +909,25 @@ async function runAnalysis() {
 
     setState('results');
 
-    // Reset & reveal feedback widget after a short delay
-    selectedRating = 0; selectedTags = [];
-    ['feedback-form-body','feedback-success'].forEach((id,i) => {
-      document.getElementById(id).style.display = i===0 ? 'block' : 'none';
-    });
-    document.getElementById('feedback-comment').value = '';
-    document.getElementById('feedback-email').value = '';
-    document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.feedback-tag').forEach(t => t.classList.remove('selected'));
-    const fsb = document.getElementById('feedback-submit-btn');
-    fsb.disabled = false; fsb.textContent = 'Send Feedback →';
-    document.getElementById('feedback-widget').style.display = 'none';
-    setTimeout(showFeedback, 1400);
+    // Reset feedback widget — wrapped in its own try/catch
+    // so any DOM error here CANNOT wipe out the results display
+    try {
+      selectedRating = 0; selectedTags = [];
+      const fbody = document.getElementById('feedback-form-body');
+      const fsuccess = document.getElementById('feedback-success');
+      const fwidget = document.getElementById('feedback-widget');
+      const fcomment = document.getElementById('feedback-comment');
+      const femail = document.getElementById('feedback-email');
+      const fsb = document.getElementById('feedback-submit-btn');
+      if (fbody) fbody.style.display = 'block';
+      if (fsuccess) fsuccess.style.display = 'none';
+      if (fcomment) fcomment.value = '';
+      if (femail) femail.value = '';
+      if (fsb) { fsb.disabled = false; fsb.textContent = 'Send Feedback →'; }
+      document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.feedback-tag').forEach(t => t.classList.remove('selected'));
+      if (fwidget) { fwidget.style.display = 'none'; setTimeout(showFeedback, 1400); }
+    } catch (_) { /* feedback reset failed silently — results still shown */ }
 
   } catch (err) {
     const msg = err.message || 'Unknown error';
