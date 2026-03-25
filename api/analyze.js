@@ -1,52 +1,45 @@
 /**
  * APEX · Anthropic API Proxy
- * Vercel Serverless Function with Edge Runtime + Streaming
- *
- * Uses the Edge runtime which supports streaming responses.
- * First byte arrives in ~1s, so Vercel's CDN never times out.
- * API key stays server-side — never exposed to the browser.
+ * Vercel Serverless Function — Node.js runtime
+ * maxDuration = 60 extends timeout to 60s (Pro plan)
  */
 
-export const config = {
-  runtime: 'edge',
-};
+export const maxDuration = 60;
 
-export default async function handler(request) {
+export default async function handler(req, res) {
   const cors = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: cors });
+  if (req.method === 'OPTIONS') {
+    Object.entries(cors).forEach(([k,v]) => res.setHeader(k,v));
+    return res.status(204).end();
   }
 
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ error: { message: 'Method not allowed' } }), {
-      status: 405, headers: { ...cors, 'Content-Type': 'application/json' }
-    });
+  if (req.method !== 'POST') {
+    Object.entries(cors).forEach(([k,v]) => res.setHeader(k,v));
+    return res.status(405).json({ error: { message: 'Method not allowed' } });
   }
+
+  Object.entries(cors).forEach(([k,v]) => res.setHeader(k,v));
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return new Response(JSON.stringify({
-      error: { message: 'ANTHROPIC_API_KEY not set. Add it in Vercel → Project Settings → Environment Variables.' }
-    }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
+    return res.status(500).json({
+      error: { message: 'ANTHROPIC_API_KEY not set. Go to Vercel project Settings → Environment Variables.' }
+    });
   }
 
   let body;
   try {
-    body = await request.json();
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   } catch {
-    return new Response(JSON.stringify({ error: { message: 'Invalid JSON body' } }), {
-      status: 400, headers: { ...cors, 'Content-Type': 'application/json' }
-    });
+    return res.status(400).json({ error: { message: 'Invalid JSON body' } });
   }
-
   delete body.api_key;
 
-  // Forward to Anthropic
   let anthropicRes;
   try {
     anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -59,27 +52,16 @@ export default async function handler(request) {
       body: JSON.stringify(body),
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: { message: 'Could not reach Anthropic: ' + err.message } }), {
-      status: 502, headers: { ...cors, 'Content-Type': 'application/json' }
-    });
+    return res.status(502).json({ error: { message: 'Could not reach Anthropic: ' + err.message } });
   }
 
   if (!anthropicRes.ok) {
     let errBody = {};
     try { errBody = await anthropicRes.json(); } catch (_) {}
     const msg = errBody?.error?.message ?? 'Anthropic returned HTTP ' + anthropicRes.status;
-    return new Response(JSON.stringify({ error: { message: msg } }), {
-      status: anthropicRes.status,
-      headers: { ...cors, 'Content-Type': 'application/json' }
-    });
+    return res.status(anthropicRes.status).json({ error: { message: msg } });
   }
 
-  // Stream the response back — first byte arrives in ~1s, CDN stays happy
-  return new Response(anthropicRes.body, {
-    status: 200,
-    headers: {
-      ...cors,
-      'Content-Type': anthropicRes.headers.get('Content-Type') ?? 'application/json',
-    },
-  });
+  const data = await anthropicRes.json();
+  return res.status(200).json(data);
 }
