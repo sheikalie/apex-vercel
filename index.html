@@ -391,14 +391,16 @@ function showQuote(q) {
   var arrow  = chgNum > 0 ? '▲' : chgNum < 0 ? '▼' : '–';
 
   var stats = [];
-  if (q.open)       stats.push({l:'Open',    v:'$'+q.open});
-  if (q.high)       stats.push({l:'High',    v:'$'+q.high});
-  if (q.low)        stats.push({l:'Low',     v:'$'+q.low});
-  if (q.week52High) stats.push({l:'52W Hi',  v:'$'+q.week52High});
-  if (q.week52Low)  stats.push({l:'52W Lo',  v:'$'+q.week52Low});
-  if (q.marketCap)  stats.push({l:'Mkt Cap', v:q.marketCap});
-  if (q.pe)         stats.push({l:'P/E',     v:q.pe});
-  if (q.volume)     stats.push({l:'Volume',  v:q.volume});
+  if (q.open)       stats.push({l:'Open',      v:'$'+q.open});
+  if (q.high)       stats.push({l:'Day High',  v:'$'+q.high});
+  if (q.low)        stats.push({l:'Day Low',   v:'$'+q.low});
+  if (q.prevClose)  stats.push({l:'Prev Close',v:'$'+q.prevClose});
+  if (q.week52High) stats.push({l:'52W High',  v:'$'+q.week52High});
+  if (q.week52Low)  stats.push({l:'52W Low',   v:'$'+q.week52Low});
+  if (q.marketCap)  stats.push({l:'Mkt Cap',   v:q.marketCap});
+  if (q.pe)         stats.push({l:'P/E',       v:q.pe});
+  if (q.exchange)   stats.push({l:'Exchange',  v:q.exchange});
+  if (q.industry)   stats.push({l:'Industry',  v:q.industry});
 
   var statsHtml = stats.map(function(s) {
     return '<div class="q-stat"><span class="q-stat-l">'+s.l+'</span><span class="q-stat-v">'+s.v+'</span></div>';
