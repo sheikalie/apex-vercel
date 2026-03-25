@@ -7,1057 +7,557 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg-base: #0a0c0f;
-    --bg-card: #0f1216;
-    --bg-elevated: #141820;
-    --bg-hover: #1a2030;
-    --border: #1e2535;
-    --border-subtle: #161c28;
-    --gold: #c9a84c;
-    --gold-dim: #8a6e2f;
-    --gold-bright: #e8c96a;
-    --gold-glow: rgba(201,168,76,0.12);
-    --text-primary: #e8e4d8;
-    --text-secondary: #8a9ab5;
-    --text-muted: #4a5568;
-    --text-data: #c0cce0;
-    --accent-blue: #3a7bd5;
-    --accent-green: #2ecc71;
-    --accent-red: #e74c3c;
-    --accent-amber: #f39c12;
-    --accent-teal: #1abc9c;
-    --radius: 6px;
-    --shadow: 0 4px 24px rgba(0,0,0,0.5);
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg-base);
-    color: var(--text-primary);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .app-shell {
-    position: relative;
-    z-index: 1;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px 80px;
-  }
-
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 28px 0 32px;
-    border-bottom: 1px solid var(--border-subtle);
-    margin-bottom: 48px;
-  }
-
-  .logo-mark { display: flex; align-items: center; gap: 12px; }
-
-  .logo-diamond {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-    flex-shrink: 0;
-  }
-
-  .logo-text {
-    font-family: 'Libre Baskerville', serif;
-    font-size: 22px; font-weight: 700;
-    letter-spacing: 0.12em; color: var(--gold);
-  }
-
-  .logo-sub {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; color: var(--text-muted); letter-spacing: 0.2em; margin-top: 2px;
-  }
-
-  .header-right {
-    display: flex; align-items: center; gap: 8px;
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted);
-  }
-
-  .status-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--accent-green);
-    box-shadow: 0 0 6px var(--accent-green);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  .hero-section { text-align: center; margin-bottom: 52px; }
-
-  .hero-eyebrow {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    letter-spacing: 0.3em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 20px;
-  }
-
-  .hero-title {
-    font-family: 'Libre Baskerville', serif;
-    font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1;
-    color: var(--text-primary); margin-bottom: 16px;
-  }
-
-  .hero-title span { color: var(--gold); }
-
-  .hero-subtitle {
-    font-size: 15px; color: var(--text-secondary);
-    max-width: 560px; margin: 0 auto 40px; line-height: 1.7;
-  }
-
-  .search-container {
-    display: flex; align-items: center;
-    max-width: 560px; margin: 0 auto;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 6px 6px 6px 20px; gap: 12px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  .search-container:focus-within {
-    border-color: var(--gold-dim);
-    box-shadow: 0 0 0 3px var(--gold-glow);
-  }
-
-  .ticker-prefix {
-    font-family: 'JetBrains Mono', monospace; font-size: 13px;
-    color: var(--text-muted); flex-shrink: 0;
-  }
-
-  #ticker-input {
-    flex: 1; background: transparent; border: none; outline: none;
-    font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600;
-    color: var(--text-primary); letter-spacing: 0.08em; text-transform: uppercase;
-  }
-
-  #ticker-input::placeholder { color: var(--text-muted); font-weight: 300; }
-
-  .analyze-btn {
-    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
-    border: none; border-radius: 4px; padding: 12px 24px;
-    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
-    color: #0a0c0f; cursor: pointer; letter-spacing: 0.04em;
-    transition: all 0.2s; flex-shrink: 0; white-space: nowrap;
-  }
-
-  .analyze-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(201,168,76,0.3);
-  }
-
-  .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .quick-tickers {
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px; margin-top: 16px; flex-wrap: wrap;
-  }
-
-  .quick-label { font-size: 12px; color: var(--text-muted); }
-
-  .quick-chip {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    padding: 4px 10px; background: var(--bg-elevated);
-    border: 1px solid var(--border); border-radius: 3px;
-    color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
-  }
-
-  .quick-chip:hover { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
-
-  .dimensions-grid {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 48px;
-  }
-
-  @media (max-width: 768px) { .dimensions-grid { grid-template-columns: repeat(2, 1fr); } }
-
-  .dim-card {
-    background: var(--bg-card); border: 1px solid var(--border-subtle);
-    border-radius: var(--radius); padding: 16px; text-align: center;
-  }
-
-  .dim-icon { font-size: 20px; margin-bottom: 8px; }
-  .dim-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; line-height: 1.4; }
-
-  #loading-state { display: none; }
-
-  .loading-header {
-    display: flex; align-items: center; gap: 16px; margin-bottom: 32px;
-    padding: 20px 24px; background: var(--bg-card);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    border-left: 3px solid var(--gold);
-  }
-
-  .loading-spinner {
-    width: 24px; height: 24px;
-    border: 2px solid var(--border); border-top-color: var(--gold);
-    border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loading-text { font-size: 14px; color: var(--text-secondary); }
-  .loading-ticker { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--gold); }
-
-  .loading-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-
-  .loading-step {
-    height: 80px; background: var(--bg-card);
-    border: 1px solid var(--border-subtle); border-radius: var(--radius);
-    overflow: hidden; position: relative;
-  }
-
-  .loading-step::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.05), transparent);
-    animation: shimmer 1.5s infinite;
-  }
-
-  @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
-
-  #results-container { display: none; }
-
-  .results-header {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    margin-bottom: 32px; gap: 24px; flex-wrap: wrap;
-  }
-
-  .results-ticker-block { display: flex; align-items: center; gap: 16px; }
-
-  .results-ticker {
-    font-family: 'Libre Baskerville', serif; font-size: 42px;
-    font-weight: 700; color: var(--gold); line-height: 1;
-  }
-
-  .results-meta { display: flex; flex-direction: column; gap: 4px; }
-
-  .results-label {
-    font-family: 'JetBrains Mono', monospace; font-size: 10px;
-    color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase;
-  }
-
-  .results-timestamp { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-secondary); }
-
-  .results-actions { display: flex; gap: 8px; }
-
-  .btn-outline {
-    background: transparent; border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 8px 16px; font-size: 13px; color: var(--text-secondary);
-    cursor: pointer; transition: all 0.15s;
-  }
-
-  .btn-outline:hover { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
-
-  .sections-layout { display: flex; flex-direction: column; gap: 16px; }
-
-  .section-card {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); overflow: hidden; transition: border-color 0.2s;
-  }
-
-  .section-card:hover { border-color: var(--gold-dim); }
-
-  .section-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; cursor: pointer; user-select: none;
-    background: var(--bg-elevated); border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .section-title-row { display: flex; align-items: center; gap: 12px; }
-  .section-icon { font-size: 18px; width: 32px; text-align: center; }
-
-  .section-title { font-family: 'Libre Baskerville', serif; font-size: 15px; font-weight: 700; color: var(--text-primary); }
-
-  .section-badge {
-    font-family: 'JetBrains Mono', monospace; font-size: 10px;
-    padding: 2px 8px; background: var(--gold-glow);
-    border: 1px solid var(--gold-dim); border-radius: 3px;
-    color: var(--gold); letter-spacing: 0.05em;
-  }
-
-  .section-chevron { color: var(--text-muted); font-size: 12px; transition: transform 0.2s; }
-  .section-card.collapsed .section-chevron { transform: rotate(-90deg); }
-
-  .section-body {
-    padding: 24px; font-size: 14px; line-height: 1.8;
-    color: var(--text-secondary); transition: all 0.2s;
-  }
-
-  .section-card.collapsed .section-body { display: none; }
-
-  .section-body h1,.section-body h2,.section-body h3,.section-body h4 {
-    font-family: 'Libre Baskerville', serif; color: var(--text-primary);
-    margin: 20px 0 10px; font-size: 15px;
-  }
-
-  .section-body h1:first-child,.section-body h2:first-child,.section-body h3:first-child { margin-top: 0; }
-  .section-body strong { color: var(--text-data); font-weight: 600; }
-  .section-body em { color: var(--gold); font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-  .section-body ul,.section-body ol { padding-left: 20px; margin: 10px 0; }
-  .section-body li { margin: 6px 0; padding-left: 4px; }
-  .section-body li::marker { color: var(--gold-dim); }
-  .section-body p { margin: 10px 0; }
-  .section-body p:first-child { margin-top: 0; }
-
-  .section-body code {
-    font-family: 'JetBrains Mono', monospace; font-size: 12px;
-    background: var(--bg-elevated); border: 1px solid var(--border);
-    padding: 1px 6px; border-radius: 3px; color: var(--gold);
-  }
-
-  .section-body pre {
-    background: var(--bg-elevated); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px; overflow-x: auto; margin: 12px 0;
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-data);
-  }
-
-  .section-body table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
-
-  .section-body th {
-    background: var(--bg-elevated); color: var(--gold);
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border);
-  }
-
-  .section-body td { padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); }
-  .section-body tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
-
-  #error-state {
-    display: none; background: var(--bg-card);
-    border: 1px solid rgba(231,76,60,0.3); border-left: 3px solid var(--accent-red);
-    border-radius: var(--radius); padding: 20px 24px;
-  }
-
-  .error-title { color: var(--accent-red); font-weight: 600; margin-bottom: 6px; }
-  .error-msg { font-size: 13px; color: var(--text-secondary); }
-
-  .footer-disclaimer {
-    margin-top: 48px; padding: 16px 20px;
-    background: var(--bg-card); border: 1px solid var(--border-subtle);
-    border-radius: var(--radius); font-size: 11px; color: var(--text-muted);
-    line-height: 1.6; text-align: center;
-  }
-
-  .raw-content {
-    font-size: 14px; line-height: 1.8; color: var(--text-secondary);
-    white-space: pre-wrap; font-family: 'DM Sans', sans-serif;
-  }
-
-  /* ── FEEDBACK WIDGET ── */
-  #feedback-widget {
-    display: none;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 32px;
-    margin-top: 20px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  #feedback-widget::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-dim));
-  }
-
-  .feedback-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 20px;
-  }
-
-  .feedback-title {
-    font-family: 'Libre Baskerville', serif;
-    font-size: 16px; font-weight: 700; color: var(--text-primary);
-  }
-
-  .feedback-sub {
-    font-size: 12px; color: var(--text-muted); margin-top: 2px;
-  }
-
-  .feedback-skip {
-    font-size: 12px; color: var(--text-muted); cursor: pointer;
-    background: none; border: none; font-family: 'DM Sans', sans-serif;
-    transition: color 0.15s; padding: 4px 8px;
-  }
-
-  .feedback-skip:hover { color: var(--text-secondary); }
-
-  /* Star rating */
-  .stars-row {
-    display: flex; align-items: center; gap: 6px; margin-bottom: 20px;
-  }
-
-  .stars-label {
-    font-size: 13px; color: var(--text-secondary); margin-right: 8px;
-  }
-
-  .star {
-    font-size: 28px; cursor: pointer; transition: transform 0.1s;
-    opacity: 0.3; filter: grayscale(1);
-    background: none; border: none; padding: 2px;
-    line-height: 1;
-  }
-
-  .star.active, .star:hover { opacity: 1; filter: grayscale(0); transform: scale(1.15); }
-  .star.active ~ .star { opacity: 0.3; filter: grayscale(1); transform: none; }
-
-  /* Tag chips */
-  .tags-row {
-    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
-  }
-
-  .feedback-tag {
-    font-size: 12px; padding: 5px 12px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    color: var(--text-secondary);
-    cursor: pointer; transition: all 0.15s;
-  }
-
-  .feedback-tag.selected {
-    background: var(--gold-glow);
-    border-color: var(--gold-dim);
-    color: var(--gold);
-  }
-
-  /* Text area */
-  .feedback-textarea {
-    width: 100%; background: var(--bg-elevated);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 12px 16px; font-family: 'DM Sans', sans-serif;
-    font-size: 13px; color: var(--text-primary);
-    resize: vertical; min-height: 80px;
-    outline: none; transition: border-color 0.2s;
-    margin-bottom: 16px;
-  }
-
-  .feedback-textarea:focus { border-color: var(--gold-dim); }
-  .feedback-textarea::placeholder { color: var(--text-muted); }
-
-  /* Email row */
-  .feedback-email-row {
-    display: flex; gap: 12px; margin-bottom: 16px; align-items: center;
-  }
-
-  .feedback-email {
-    flex: 1; background: var(--bg-elevated);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 10px 14px; font-family: 'DM Sans', sans-serif;
-    font-size: 13px; color: var(--text-primary);
-    outline: none; transition: border-color 0.2s;
-  }
-
-  .feedback-email:focus { border-color: var(--gold-dim); }
-  .feedback-email::placeholder { color: var(--text-muted); }
-
-  .feedback-email-note { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
-
-  /* Submit */
-  .feedback-submit {
-    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
-    border: none; border-radius: 4px;
-    padding: 10px 22px;
-    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
-    color: #0a0c0f; cursor: pointer; transition: all 0.2s;
-  }
-
-  .feedback-submit:hover:not(:disabled) {
-    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
-    box-shadow: 0 4px 14px rgba(201,168,74,0.3);
-  }
-
-  .feedback-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* Success */
-  .feedback-success {
-    display: none; text-align: center; padding: 16px 0;
-  }
-
-  .feedback-success-icon { font-size: 36px; margin-bottom: 8px; }
-  .feedback-success-title { font-size: 16px; font-weight: 600; color: var(--accent-green); margin-bottom: 4px; }
-  .feedback-success-sub { font-size: 13px; color: var(--text-secondary); }
+:root {
+  --bg:        #0a0c0f;
+  --bg-card:   #0f1216;
+  --bg-el:     #141820;
+  --border:    #1e2535;
+  --border-s:  #161c28;
+  --gold:      #c9a84c;
+  --gold-dim:  #8a6e2f;
+  --gold-b:    #e8c96a;
+  --gold-glow: rgba(201,168,76,0.12);
+  --text:      #e8e4d8;
+  --text2:     #8a9ab5;
+  --text3:     #4a5568;
+  --text-d:    #c0cce0;
+  --green:     #2ecc71;
+  --red:       #e74c3c;
+  --amber:     #f39c12;
+  --blue:      #3a7bd5;
+  --r:         6px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(201,168,76,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.03) 1px,transparent 1px); background-size:60px 60px; pointer-events:none; z-index:0; }
+.shell { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:0 24px 80px; }
+
+/* HEADER */
+header { display:flex; align-items:center; justify-content:space-between; padding:28px 0 32px; border-bottom:1px solid var(--border-s); margin-bottom:48px; }
+.logo { display:flex; align-items:center; gap:12px; }
+.logo-gem { width:32px; height:32px; background:linear-gradient(135deg,var(--gold),var(--gold-dim)); clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%); flex-shrink:0; }
+.logo-name { font-family:'Libre Baskerville',serif; font-size:22px; font-weight:700; letter-spacing:.12em; color:var(--gold); }
+.logo-sub { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text3); letter-spacing:.2em; margin-top:2px; }
+.hdr-r { display:flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text3); }
+.live-dot { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* HERO */
+.hero { text-align:center; margin-bottom:52px; }
+.hero-eye { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.3em; color:var(--gold-dim); text-transform:uppercase; margin-bottom:20px; }
+.hero-h1 { font-family:'Libre Baskerville',serif; font-size:clamp(32px,5vw,52px); font-weight:700; line-height:1.1; margin-bottom:16px; }
+.hero-h1 span { color:var(--gold); }
+.hero-sub { font-size:15px; color:var(--text2); max-width:560px; margin:0 auto 40px; line-height:1.7; }
+.search-wrap { display:flex; align-items:center; max-width:560px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r); padding:6px 6px 6px 20px; gap:12px; transition:border-color .2s,box-shadow .2s; }
+.search-wrap:focus-within { border-color:var(--gold-dim); box-shadow:0 0 0 3px var(--gold-glow); }
+.ticker-pre { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text3); flex-shrink:0; }
+#ticker-input { flex:1; background:transparent; border:none; outline:none; font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:600; color:var(--text); letter-spacing:.08em; text-transform:uppercase; }
+#ticker-input::placeholder { color:var(--text3); font-weight:300; }
+.analyze-btn { background:linear-gradient(135deg,var(--gold),var(--gold-dim)); border:none; border-radius:4px; padding:12px 24px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; color:#0a0c0f; cursor:pointer; letter-spacing:.04em; transition:all .2s; flex-shrink:0; white-space:nowrap; }
+.analyze-btn:hover:not(:disabled) { background:linear-gradient(135deg,var(--gold-b),var(--gold)); transform:translateY(-1px); box-shadow:0 4px 16px rgba(201,168,76,.3); }
+.analyze-btn:disabled { opacity:.5; cursor:not-allowed; }
+.quick-chips { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:16px; flex-wrap:wrap; }
+.ql { font-size:12px; color:var(--text3); }
+.chip { font-family:'JetBrains Mono',monospace; font-size:11px; padding:4px 10px; background:var(--bg-el); border:1px solid var(--border); border-radius:3px; color:var(--text2); cursor:pointer; transition:all .15s; }
+.chip:hover { border-color:var(--gold-dim); color:var(--gold); background:var(--gold-glow); }
+
+/* DIMS */
+.dims { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:48px; }
+.dim-card { background:var(--bg-card); border:1px solid var(--border-s); border-radius:var(--r); padding:16px; text-align:center; }
+.dim-icon { font-size:20px; margin-bottom:8px; }
+.dim-lbl { font-size:11px; color:var(--text3); letter-spacing:.05em; line-height:1.4; }
+
+/* LOADING */
+#loading { display:none; }
+.load-hdr { display:flex; align-items:center; gap:16px; margin-bottom:32px; padding:20px 24px; background:var(--bg-card); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:var(--r); }
+.spinner { width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin .8s linear infinite; flex-shrink:0; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.load-txt { font-size:14px; color:var(--text2); }
+.load-tick { font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--gold); }
+.load-bars { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+.load-bar { height:80px; background:var(--bg-card); border:1px solid var(--border-s); border-radius:var(--r); overflow:hidden; position:relative; }
+.load-bar::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(201,168,76,.05),transparent); animation:shimmer 1.5s infinite; }
+@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+
+/* QUOTE BANNER */
+#quote-banner { display:none; background:var(--bg-card); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:var(--r); padding:14px 20px; margin-bottom:20px; }
+.q-inner { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.q-sym { font-family:'Libre Baskerville',serif; font-size:28px; font-weight:700; color:var(--gold); line-height:1; }
+.q-name { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; margin-top:2px; }
+.q-price { font-size:32px; font-weight:600; color:var(--text); line-height:1; }
+.q-chg { font-family:'JetBrains Mono',monospace; font-size:13px; padding:3px 10px; border-radius:4px; }
+.q-up   { color:var(--green); background:rgba(46,204,113,.1); border:1px solid rgba(46,204,113,.2); }
+.q-down { color:var(--red);   background:rgba(231,76,60,.1);  border:1px solid rgba(231,76,60,.2); }
+.q-flat { color:var(--text3); background:var(--bg-el); }
+.q-stats { display:flex; gap:20px; flex-wrap:wrap; margin-left:auto; }
+.q-stat { display:flex; flex-direction:column; align-items:flex-end; }
+.q-stat-l { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; }
+.q-stat-v { font-size:13px; color:var(--text-d); font-weight:500; }
+.q-dot { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s infinite; flex-shrink:0; }
+
+/* ERROR */
+#error-box { display:none; background:var(--bg-card); border:1px solid rgba(231,76,60,.3); border-left:3px solid var(--red); border-radius:var(--r); padding:20px 24px; }
+.err-title { color:var(--red); font-weight:600; margin-bottom:6px; }
+.err-msg { font-size:13px; color:var(--text2); }
+
+/* RESULTS */
+#results { display:none; }
+.res-hdr { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; gap:24px; flex-wrap:wrap; }
+.res-ticker { font-family:'Libre Baskerville',serif; font-size:42px; font-weight:700; color:var(--gold); line-height:1; }
+.res-meta { display:flex; flex-direction:column; gap:4px; }
+.res-lbl { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text3); letter-spacing:.2em; text-transform:uppercase; }
+.res-ts { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text2); }
+.res-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.btn-o { background:transparent; border:1px solid var(--border); border-radius:var(--r); padding:8px 16px; font-size:13px; color:var(--text2); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
+.btn-o:hover { border-color:var(--gold-dim); color:var(--gold); background:var(--gold-glow); }
+.sections { display:flex; flex-direction:column; gap:16px; }
+
+/* SECTION CARDS */
+.sc { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; transition:border-color .2s; }
+.sc:hover { border-color:var(--gold-dim); }
+.sc-hdr { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; cursor:pointer; user-select:none; background:var(--bg-el); border-bottom:1px solid var(--border-s); }
+.sc-left { display:flex; align-items:center; gap:12px; }
+.sc-icon { font-size:18px; width:32px; text-align:center; }
+.sc-title { font-family:'Libre Baskerville',serif; font-size:15px; font-weight:700; color:var(--text); }
+.sc-badge { font-family:'JetBrains Mono',monospace; font-size:10px; padding:2px 8px; background:var(--gold-glow); border:1px solid var(--gold-dim); border-radius:3px; color:var(--gold); letter-spacing:.05em; }
+.sc-chev { color:var(--text3); font-size:12px; transition:transform .2s; }
+.sc.closed .sc-chev { transform:rotate(-90deg); }
+.sc-body { padding:24px; font-size:14px; line-height:1.8; color:var(--text2); }
+.sc.closed .sc-body { display:none; }
+.sc-body h1,.sc-body h2,.sc-body h3,.sc-body h4 { font-family:'Libre Baskerville',serif; color:var(--text); margin:20px 0 10px; font-size:15px; }
+.sc-body h1:first-child,.sc-body h2:first-child,.sc-body h3:first-child { margin-top:0; }
+.sc-body strong { color:var(--text-d); font-weight:600; }
+.sc-body ul,.sc-body ol { padding-left:20px; margin:10px 0; }
+.sc-body li { margin:6px 0; padding-left:4px; }
+.sc-body li::marker { color:var(--gold-dim); }
+.sc-body p { margin:10px 0; }
+.sc-body p:first-child { margin-top:0; }
+.sc-body code { font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--bg-el); border:1px solid var(--border); padding:1px 6px; border-radius:3px; color:var(--gold); }
+.sc-body table { width:100%; border-collapse:collapse; margin:16px 0; font-size:13px; }
+.sc-body th { background:var(--bg-el); color:var(--gold); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); }
+.sc-body td { padding:10px 14px; border-bottom:1px solid var(--border-s); color:var(--text2); }
+.sc-body tr:hover td { background:var(--bg-el); color:var(--text); }
+
+/* DISCLAIMER */
+.disc { margin-top:48px; padding:16px 20px; background:var(--bg-card); border:1px solid var(--border-s); border-radius:var(--r); font-size:11px; color:var(--text3); line-height:1.6; text-align:center; }
 </style>
 </head>
 <body>
+<div class="shell">
 
-<div class="app-shell">
-
-  <header>
-    <div class="logo-mark">
-      <div class="logo-diamond"></div>
-      <div>
-        <div class="logo-text">APEX</div>
-        <div class="logo-sub">Investment Intelligence Terminal</div>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="status-dot"></div>
-      <span>LIVE · AI-POWERED</span>
-    </div>
-  </header>
-
-  <div class="hero-section">
-    <div class="hero-eyebrow">Institutional-Grade Analysis</div>
-    <h1 class="hero-title">
-      Analyze Any Stock with<br><span>Elite-Level Precision</span>
-    </h1>
-    <p class="hero-subtitle">
-      Combining PE fund manager rigor, McKinsey strategic frameworks, and quantitative factor research — synthesized into one unified intelligence report.
-    </p>
-
-    <div class="search-container">
-      <span class="ticker-prefix">$</span>
-      <input id="ticker-input" type="text" placeholder="NVDA" maxlength="10" autocomplete="off" spellcheck="false">
-      <button class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">Run Analysis →</button>
-    </div>
-
-    <div class="quick-tickers">
-      <span class="quick-label">Quick access:</span>
-      <span class="quick-chip" onclick="setTicker('NVDA')">NVDA</span>
-      <span class="quick-chip" onclick="setTicker('AAPL')">AAPL</span>
-      <span class="quick-chip" onclick="setTicker('MSFT')">MSFT</span>
-      <span class="quick-chip" onclick="setTicker('PLTR')">PLTR</span>
-      <span class="quick-chip" onclick="setTicker('TSLA')">TSLA</span>
-      <span class="quick-chip" onclick="setTicker('AMZN')">AMZN</span>
-      <span class="quick-chip" onclick="setTicker('IBM')">IBM</span>
+<header>
+  <div class="logo">
+    <div class="logo-gem"></div>
+    <div>
+      <div class="logo-name">APEX</div>
+      <div class="logo-sub">Investment Intelligence Terminal</div>
     </div>
   </div>
+  <div class="hdr-r"><div class="live-dot"></div><span>LIVE · AI-POWERED</span></div>
+</header>
 
-  <div class="dimensions-grid" id="dimensions-grid">
-    <div class="dim-card"><div class="dim-icon">📊</div><div class="dim-label">Fundamental<br>Hardcore Score</div></div>
-    <div class="dim-card"><div class="dim-icon">🌊</div><div class="dim-label">Capital Flow<br>Intelligence</div></div>
-    <div class="dim-card"><div class="dim-icon">📈</div><div class="dim-label">Technical &amp;<br>Quant Analysis</div></div>
-    <div class="dim-card"><div class="dim-icon">⚡</div><div class="dim-label">Policy &amp;<br>Catalyst Scan</div></div>
-    <div class="dim-card"><div class="dim-icon">🎲</div><div class="dim-label">Trading Strategy<br>&amp; Probability</div></div>
+<div class="hero">
+  <div class="hero-eye">Institutional-Grade Analysis</div>
+  <h1 class="hero-h1">Analyze Any Stock with<br><span>Elite-Level Precision</span></h1>
+  <p class="hero-sub">Combining PE fund manager rigor, McKinsey strategic frameworks, and quantitative factor research — synthesized into one unified intelligence report.</p>
+  <div class="search-wrap">
+    <span class="ticker-pre">$</span>
+    <input id="ticker-input" type="text" placeholder="NVDA" maxlength="10" autocomplete="off" spellcheck="false">
+    <button class="analyze-btn" id="analyze-btn" onclick="run()">Run Analysis →</button>
   </div>
-
-  <div id="loading-state">
-    <div class="loading-header">
-      <div class="loading-spinner"></div>
-      <div class="loading-text">
-        Conducting deep analysis on <span class="loading-ticker" id="loading-ticker">—</span>
-        &nbsp;·&nbsp; Pulling SEC filings, market data, institutional flows, technicals...
-      </div>
-    </div>
-    <div class="loading-steps">
-      <div class="loading-step"></div>
-      <div class="loading-step" style="animation-delay:0.15s"></div>
-      <div class="loading-step" style="animation-delay:0.3s"></div>
-      <div class="loading-step" style="animation-delay:0.45s"></div>
-      <div class="loading-step" style="animation-delay:0.6s"></div>
-    </div>
+  <div class="quick-chips">
+    <span class="ql">Quick access:</span>
+    <span class="chip" onclick="pick('NVDA')">NVDA</span>
+    <span class="chip" onclick="pick('AAPL')">AAPL</span>
+    <span class="chip" onclick="pick('MSFT')">MSFT</span>
+    <span class="chip" onclick="pick('PLTR')">PLTR</span>
+    <span class="chip" onclick="pick('TSLA')">TSLA</span>
+    <span class="chip" onclick="pick('AMZN')">AMZN</span>
+    <span class="chip" onclick="pick('IBM')">IBM</span>
   </div>
-
-  <div id="error-state">
-    <div class="error-title">Analysis Failed</div>
-    <div class="error-msg" id="error-msg">An error occurred. Please try again.</div>
-    <div id="error-hints" style="margin-top:14px;display:flex;flex-direction:column;gap:8px"></div>
-  </div>
-
-  <div id="results-container">
-    <div class="results-header">
-      <div class="results-ticker-block">
-        <div class="results-ticker" id="results-ticker-label">—</div>
-        <div class="results-meta">
-          <div class="results-label">Analysis Report</div>
-          <div class="results-timestamp" id="results-timestamp">—</div>
-        </div>
-      </div>
-      <div class="results-actions">
-        <button class="btn-outline" onclick="collapseAll()">Collapse All</button>
-        <button class="btn-outline" onclick="expandAll()">Expand All</button>
-        <button class="btn-outline" onclick="copyReport()">Copy Report</button>
-        <button class="btn-outline" onclick="resetApp()">← New Analysis</button>
-      </div>
-    </div>
-    <div class="sections-layout" id="sections-layout"></div>
-  </div>
-
-  <!-- FEEDBACK WIDGET -->
-  <div id="feedback-widget">
-    <div class="feedback-header">
-      <div>
-        <div class="feedback-title">How was this analysis?</div>
-        <div class="feedback-sub">Your feedback shapes what APEX becomes. Takes 30 seconds.</div>
-      </div>
-      <button class="feedback-skip" onclick="skipFeedback()">Skip ×</button>
-    </div>
-    <div id="feedback-form-body">
-      <div class="stars-row">
-        <span class="stars-label">Overall quality:</span>
-        <button class="star" onclick="setStar(1)" id="star-1">⭐</button>
-        <button class="star" onclick="setStar(2)" id="star-2">⭐</button>
-        <button class="star" onclick="setStar(3)" id="star-3">⭐</button>
-        <button class="star" onclick="setStar(4)" id="star-4">⭐</button>
-        <button class="star" onclick="setStar(5)" id="star-5">⭐</button>
-      </div>
-      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">What stood out? (pick any)</div>
-      <div class="tags-row" id="tags-row">
-        <div class="feedback-tag" onclick="toggleTag(this)">📊 Fundamentals were sharp</div>
-        <div class="feedback-tag" onclick="toggleTag(this)">📈 Technicals were useful</div>
-        <div class="feedback-tag" onclick="toggleTag(this)">🎯 Verdict felt accurate</div>
-        <div class="feedback-tag" onclick="toggleTag(this)">⚡ Catalysts section great</div>
-        <div class="feedback-tag" onclick="toggleTag(this)">🐌 Took too long</div>
-        <div class="feedback-tag" onclick="toggleTag(this)">🌊 Capital flows section weak</div>
-        <div class="feedback-tag" onclick="toggleTag(this)">📉 Scores seemed off</div>
-        <div class="feedback-tag" onclick="toggleTag(this)">🔁 Would use again</div>
-      </div>
-      <textarea class="feedback-textarea" id="feedback-comment" placeholder="Anything else? What would make this more useful for your investing process?"></textarea>
-      <div class="feedback-email-row">
-        <input type="email" class="feedback-email" id="feedback-email" placeholder="Email (optional — to follow up with you)">
-        <span class="feedback-email-note">Optional</span>
-      </div>
-      <button class="feedback-submit" id="feedback-submit-btn" onclick="submitFeedback()">Send Feedback →</button>
-    </div>
-    <div class="feedback-success" id="feedback-success">
-      <div class="feedback-success-icon">🙏</div>
-      <div class="feedback-success-title">Thank you — seriously.</div>
-      <div class="feedback-success-sub">Every response directly shapes what APEX becomes. You're helping build something real.</div>
-    </div>
-  </div>
-
-  <!-- Hidden Netlify Forms for form detection -->
-  <form name="apex-feedback" netlify netlify-honeypot="bot-field" style="display:none">
-    <input name="bot-field"><input name="ticker"><input name="rating">
-    <input name="tags"><input name="comment"><input name="email"><input name="timestamp">
-  </form>
-  <form name="beta-signup" netlify netlify-honeypot="bot-field" style="display:none">
-    <input name="bot-field"><input name="email">
-  </form>
-
-  <div class="footer-disclaimer">
-    ⚠️ This analysis is generated by AI for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or solicitation to buy or sell any securities. Always conduct your own due diligence and consult a licensed financial advisor before making investment decisions. Past performance is not indicative of future results.
-    &nbsp;·&nbsp; <a href="beta.html" style="color:var(--text-muted);text-decoration:none">About the Beta</a>
-  </div>
-
 </div>
 
+<div class="dims" id="dims">
+  <div class="dim-card"><div class="dim-icon">📊</div><div class="dim-lbl">Fundamental<br>Score</div></div>
+  <div class="dim-card"><div class="dim-icon">🌊</div><div class="dim-lbl">Capital Flow<br>Intelligence</div></div>
+  <div class="dim-card"><div class="dim-icon">📈</div><div class="dim-lbl">Technical &amp;<br>Quant Analysis</div></div>
+  <div class="dim-card"><div class="dim-icon">⚡</div><div class="dim-lbl">Policy &amp;<br>Catalyst Scan</div></div>
+  <div class="dim-card"><div class="dim-icon">🎲</div><div class="dim-lbl">Trading Strategy<br>&amp; Probability</div></div>
+</div>
+
+<div id="loading">
+  <div class="load-hdr">
+    <div class="spinner"></div>
+    <div class="load-txt">Analyzing <span class="load-tick" id="load-tick">—</span> &nbsp;·&nbsp; Fetching live data, running 10-section analysis...</div>
+  </div>
+  <div class="load-bars">
+    <div class="load-bar"></div><div class="load-bar"></div><div class="load-bar"></div>
+    <div class="load-bar"></div><div class="load-bar"></div>
+  </div>
+</div>
+
+<div id="error-box">
+  <div class="err-title">Analysis Failed</div>
+  <div class="err-msg" id="err-msg">An error occurred.</div>
+</div>
+
+<div id="quote-banner"><div class="q-inner" id="q-inner"></div></div>
+
+<div id="results">
+  <div class="res-hdr">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="res-ticker" id="res-ticker">—</div>
+      <div class="res-meta">
+        <div class="res-lbl">Analysis Report</div>
+        <div class="res-ts" id="res-ts">—</div>
+      </div>
+    </div>
+    <div class="res-actions">
+      <button class="btn-o" onclick="collapseAll()">Collapse All</button>
+      <button class="btn-o" onclick="expandAll()">Expand All</button>
+      <button class="btn-o" onclick="copyReport()">Copy Report</button>
+      <button class="btn-o" onclick="reset()">← New Analysis</button>
+    </div>
+  </div>
+  <div class="sections" id="sections"></div>
+</div>
+
+<div class="disc">⚠️ AI-generated analysis for informational purposes only. Not financial advice. Always consult a licensed financial advisor before making investment decisions.</div>
+
+</div><!-- /shell -->
+
 <script>
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let currentTicker = '';
-let fullReportText = '';
-let selectedRating = 0;
-let selectedTags = [];
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var ticker = '';
+var reportText = '';
 
-// ── PROMPT ────────────────────────────────────────────────────────────────────
-function buildPrompt(ticker) {
-  return `You are an elite stock analyst. Produce a rigorous 10-section investment report for **${ticker}**. Use markdown headers (##), bullets, and tables throughout.
-
-## 🎯 1. Executive Summary
-- Investment thesis in 2-3 sentences
-- **Composite Score:** X/30 | **Conviction:** HIGH / MEDIUM / LOW / AVOID
-- **Verdict (≤12 words):**
-
-## 🏢 2. Company Overview
-- Business model, moat, key revenue drivers (3-4 bullets)
-- Top strategic priority right now
-
-## ⚔️ 3. Peer Comparison
-| Metric | ${ticker} | Peer 1 | Peer 2 |
-|---|---|---|---|
-| P/E | | | |
-| Rev Growth | | | |
-| Op Margin | | | |
-
-## 📊 4. Financial Fundamentals (Score: X/10)
-- EPS growth forecast, PE/PEG, ROE, FCF, debt ratio — 5 bullets with numbers
-
-## 🌊 5. Institutional & Sentiment
-- Institutional ownership trend, insider activity, short interest, analyst consensus
-
-## 📈 6. Technical Analysis
-- Trend structure, key support/resistance, RSI/MACD state, volume
-
-## ⚡ 7. Catalysts
-- Top 3 upcoming catalysts with expected impact
-
-## ⚠️ 8. Risks
-- Top 3 risks with severity (High/Med/Low) and iron stop-loss price
-
-## 🎲 9. Trading Strategy
-- 30d / 90d upside probability (%), price target range, position size, entry zone
-
-## 📋 10. Scorecard
-| Dimension | Score | Rationale |
-|---|---|---|
-| Performance | X/5 | |
-| Valuation | X/5 | |
-| Growth | X/5 | |
-| Profitability | X/5 | |
-| Technical | X/5 | |
-| Risk | X/5 | |
-| **TOTAL** | **X/30** | |`;
-}
-
-// ── UI HELPERS ────────────────────────────────────────────────────────────────
-function setTicker(t) {
+// ─── UI ───────────────────────────────────────────────────────────────────────
+function pick(t) {
   document.getElementById('ticker-input').value = t;
   document.getElementById('ticker-input').focus();
 }
 
-function setState(s) {
-  document.getElementById('loading-state').style.display     = s === 'loading' ? 'block' : 'none';
-  document.getElementById('results-container').style.display = s === 'results' ? 'block' : 'none';
-  document.getElementById('error-state').style.display       = s === 'error'   ? 'block' : 'none';
-  document.getElementById('dimensions-grid').style.display   = s === 'idle'    ? 'grid'  : 'none';
+function show(id) {
+  ['dims','loading','error-box','results'].forEach(function(x) {
+    var el = document.getElementById(x);
+    if (el) el.style.display = 'none';
+  });
+  var el = document.getElementById(id);
+  if (el) el.style.display = id === 'dims' ? 'grid' : 'block';
 }
 
-function resetApp() {
-  setState('idle');
+function reset() {
+  show('dims');
   document.getElementById('ticker-input').value = '';
+  document.getElementById('quote-banner').style.display = 'none';
   document.getElementById('ticker-input').focus();
 }
 
 function collapseAll() {
-  document.querySelectorAll('.section-card').forEach(c => c.classList.add('collapsed'));
+  document.querySelectorAll('.sc').forEach(function(c) { c.classList.add('closed'); });
 }
 
 function expandAll() {
-  document.querySelectorAll('.section-card').forEach(c => c.classList.remove('collapsed'));
+  document.querySelectorAll('.sc').forEach(function(c) { c.classList.remove('closed'); });
 }
 
-async function copyReport() {
-  if (fullReportText) {
-    await navigator.clipboard.writeText('APEX Investment Intelligence Report — ' + currentTicker + '\n\n' + fullReportText);
-    const btn = event.target;
-    const orig = btn.textContent;
-    btn.textContent = '✓ Copied!';
-    setTimeout(() => btn.textContent = orig, 2000);
+function toggle(card) { card.classList.toggle('closed'); }
+
+function copyReport() {
+  if (reportText) {
+    navigator.clipboard.writeText('APEX Report — ' + ticker + '\n\n' + reportText);
+    event.target.textContent = '✓ Copied!';
+    var b = event.target;
+    setTimeout(function() { b.textContent = 'Copy Report'; }, 2000);
   }
 }
 
-function toggleSection(card) {
-  card.classList.toggle('collapsed');
-}
-
-// ── MARKDOWN RENDERER ─────────────────────────────────────────────────────────
-function renderMarkdown(text) {
+// ─── MARKDOWN ─────────────────────────────────────────────────────────────────
+function md(text) {
   if (!text) return '';
-  return text
-    .replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, (_, header, rows) => {
-      const ths = header.split('|').filter(c => c.trim()).map(c => '<th>' + c.trim() + '</th>').join('');
-      const trs = rows.trim().split('\n').map(row => {
-        const tds = row.split('|').filter(c => c.trim()).map(c => '<td>' + c.trim() + '</td>').join('');
-        return '<tr>' + tds + '</tr>';
-      }).join('');
-      return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table>';
-    })
-    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:16px 0">')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m + '</ul>')
-    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/^([^<\n].+)$/gm, m => (!m.trim() || m.startsWith('<')) ? m : '<p>' + m + '</p>');
+  var t = text;
+
+  // Tables
+  t = t.replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, function(_, hdr, rows) {
+    var ths = hdr.split('|').filter(function(c){return c.trim();}).map(function(c){return '<th>'+c.trim()+'</th>';}).join('');
+    var trs = rows.trim().split('\n').map(function(row){
+      var tds = row.split('|').filter(function(c){return c.trim();}).map(function(c){return '<td>'+c.trim()+'</td>';}).join('');
+      return '<tr>'+tds+'</tr>';
+    }).join('');
+    return '<table><thead><tr>'+ths+'</tr></thead><tbody>'+trs+'</tbody></table>';
+  });
+
+  t = t.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+  t = t.replace(/^### (.+)$/gm,  '<h3>$1</h3>');
+  t = t.replace(/^## (.+)$/gm,   '<h2>$1</h2>');
+  t = t.replace(/^# (.+)$/gm,    '<h1>$1</h1>');
+  t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/\*(.+?)\*/g,     '<em>$1</em>');
+  t = t.replace(/`(.+?)`/g,       '<code>$1</code>');
+  t = t.replace(/^---$/gm, '<hr>');
+  t = t.replace(/^- (.+)$/gm, '<li>$1</li>');
+  t = t.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, function(m) { return '<ul>'+m+'</ul>'; });
+  t = t.replace(/\n\n/g, '</p><p>');
+  return t;
 }
 
-// ── SECTION PARSER ────────────────────────────────────────────────────────────
-const SECTION_DEFS = [
-  { emoji: '🎯', title: 'Executive Summary',                     badge: 'OVERVIEW'     },
-  { emoji: '🏢', title: 'Company Overview & Strategic Context',  badge: 'STRATEGY'     },
-  { emoji: '⚔️', title: 'Peer & Sector Comparison',              badge: 'COMPETITIVE'  },
-  { emoji: '📊', title: 'Financial Fundamentals',                badge: 'FUNDAMENTALS' },
-  { emoji: '🌊', title: 'Capital Flow & Institutional',          badge: 'FLOWS'        },
-  { emoji: '📈', title: 'Technical & Quantitative Analysis',     badge: 'TECHNICALS'   },
-  { emoji: '⚡', title: 'Catalysts & Policy',                    badge: 'CATALYSTS'    },
-  { emoji: '⚠️', title: 'Risks & Mitigation',                    badge: 'RISK'         },
-  { emoji: '🎲', title: 'Trading Strategy',                      badge: 'STRATEGY'     },
-  { emoji: '📋', title: 'Investment Scorecard',                  badge: 'SCORECARD'    },
+// ─── SECTION PARSER ───────────────────────────────────────────────────────────
+var DEFS = [
+  {e:'🎯', t:'Executive Summary',                  b:'OVERVIEW'},
+  {e:'🏢', t:'Company Overview',                   b:'STRATEGY'},
+  {e:'⚔️', t:'Peer Comparison',                    b:'COMPETITIVE'},
+  {e:'📊', t:'Financial Fundamentals',             b:'FUNDAMENTALS'},
+  {e:'🌊', t:'Institutional & Sentiment',          b:'FLOWS'},
+  {e:'📈', t:'Technical Analysis',                 b:'TECHNICALS'},
+  {e:'⚡', t:'Catalysts',                          b:'CATALYSTS'},
+  {e:'⚠️', t:'Risks',                              b:'RISK'},
+  {e:'🎲', t:'Trading Strategy',                   b:'STRATEGY'},
+  {e:'📋', t:'Scorecard',                          b:'SCORECARD'},
 ];
 
 function matchDef(heading) {
-  const h = heading.replace(/[^\w\s&]/gu, '').trim().toLowerCase();
-  for (const def of SECTION_DEFS) {
-    const d = def.title.toLowerCase();
-    if (h.includes(d.slice(0, 8)) || d.includes(h.slice(0, 8))) return def;
+  var h = heading.replace(/[^\w\s&]/gu, '').trim().toLowerCase();
+  for (var i = 0; i < DEFS.length; i++) {
+    var d = DEFS[i].t.toLowerCase();
+    if (h.indexOf(d.slice(0,6)) >= 0 || d.indexOf(h.slice(0,6)) >= 0) return DEFS[i];
   }
-  return { emoji: '📌', title: heading.replace(/^\d+\.\s*/, '').replace(/[^\w\s&]/gu, '').trim(), badge: 'SECTION' };
+  return {e:'📌', t: heading.replace(/^\d+\.\s*/,'').replace(/[^\w\s&]/gu,'').trim(), b:'SECTION'};
 }
 
 function parseSections(text) {
-  const sections = [];
-  let current = null;
-  for (const line of text.split('\n')) {
-    const h2 = line.match(/^##\s+(.+)$/);
-    if (h2) {
+  var sections = [];
+  var current = null;
+  var lines = text.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    var m = lines[i].match(/^##\s+(.+)$/);
+    if (m) {
       if (current) sections.push(current);
-      current = { heading: h2[1].trim(), content: [] };
+      current = {heading: m[1].trim(), lines: []};
     } else if (current) {
-      current.content.push(line);
+      current.lines.push(lines[i]);
     }
   }
   if (current) sections.push(current);
   return sections;
 }
 
-function buildSectionCards(sections) {
-  const layout = document.getElementById('sections-layout');
+function renderSections(sections) {
+  var layout = document.getElementById('sections');
   layout.innerHTML = '';
-  sections.forEach((section, i) => {
-    const def = matchDef(section.heading);
-    const card = document.createElement('div');
-    card.className = 'section-card' + (i > 0 ? ' collapsed' : '');
+  for (var i = 0; i < sections.length; i++) {
+    var s = sections[i];
+    var def = matchDef(s.heading);
+    var card = document.createElement('div');
+    card.className = 'sc' + (i > 0 ? ' closed' : '');
     card.innerHTML =
-      '<div class="section-header" onclick="toggleSection(this.parentElement)">' +
-        '<div class="section-title-row">' +
-          '<span class="section-icon">' + def.emoji + '</span>' +
-          '<span class="section-title">' + def.title + '</span>' +
-          '<span class="section-badge">' + def.badge + '</span>' +
+      '<div class="sc-hdr" onclick="toggle(this.parentElement)">' +
+        '<div class="sc-left">' +
+          '<span class="sc-icon">'+def.e+'</span>' +
+          '<span class="sc-title">'+def.t+'</span>' +
+          '<span class="sc-badge">'+def.b+'</span>' +
         '</div>' +
-        '<span class="section-chevron">▾</span>' +
+        '<span class="sc-chev">▾</span>' +
       '</div>' +
-      '<div class="section-body">' + renderMarkdown(section.content.join('\n')) + '</div>';
+      '<div class="sc-body">'+md(s.lines.join('\n'))+'</div>';
     layout.appendChild(card);
-  });
+  }
 }
 
-// ── LIVE QUOTE FETCHER ───────────────────────────────────────────────────────
-async function fetchQuote(ticker) {
+// ─── LIVE QUOTE ───────────────────────────────────────────────────────────────
+function fmtCap(n) {
+  if (n >= 1e12) return '$'+(n/1e12).toFixed(2)+'T';
+  if (n >= 1e9)  return '$'+(n/1e9).toFixed(2)+'B';
+  if (n >= 1e6)  return '$'+(n/1e6).toFixed(2)+'M';
+  return '$'+n.toLocaleString();
+}
+
+async function getQuote(sym) {
   try {
-    const r = await fetch('/api/quote?ticker=' + ticker);
-    const d = await r.json();
+    var r = await fetch('/api/quote?ticker='+sym);
+    var d = await r.json();
     return d.error ? null : d;
-  } catch (_) { return null; }
+  } catch(e) { return null; }
 }
 
-function renderQuoteBanner(q) {
-  const banner = document.getElementById('quote-banner');
-  const inner  = document.getElementById('quote-inner');
-  if (!q) { banner.style.display = 'none'; return; }
+function showQuote(q) {
+  var banner = document.getElementById('quote-banner');
+  var inner  = document.getElementById('q-inner');
+  if (!q || !q.price) { banner.style.display = 'none'; return; }
 
-  const up   = parseFloat(q.changePct) >= 0;
-  const flat = q.changePct === null || q.changePct === undefined;
-  const changeClass = flat ? 'flat' : (up ? 'up' : 'down');
-  const changeSign  = flat ? '' : (up ? '+' : '');
-  const arrow       = flat ? '–' : (up ? '▲' : '▼');
+  var chgNum = parseFloat(q.change || 0);
+  var chgPct = parseFloat(q.changePct || 0);
+  var cls    = chgNum > 0 ? 'q-up' : chgNum < 0 ? 'q-down' : 'q-flat';
+  var sign   = chgNum >= 0 ? '+' : '';
+  var arrow  = chgNum > 0 ? '▲' : chgNum < 0 ? '▼' : '–';
 
-  const stats = [
-    { label: 'Open',      value: q.open      ? '$' + q.open      : '–' },
-    { label: 'High',      value: q.high      ? '$' + q.high      : '–' },
-    { label: 'Low',       value: q.low       ? '$' + q.low       : '–' },
-    { label: '52W High',  value: q.week52High ? '$' + q.week52High : '–' },
-    { label: '52W Low',   value: q.week52Low  ? '$' + q.week52Low  : '–' },
-    { label: 'Mkt Cap',   value: q.marketCap  || '–' },
-    { label: 'P/E',       value: q.pe         || '–' },
-    { label: 'Volume',    value: q.volume     || '–' },
-  ].filter(s => s.value !== '–');
+  var stats = [];
+  if (q.open)       stats.push({l:'Open',    v:'$'+q.open});
+  if (q.high)       stats.push({l:'High',    v:'$'+q.high});
+  if (q.low)        stats.push({l:'Low',     v:'$'+q.low});
+  if (q.week52High) stats.push({l:'52W Hi',  v:'$'+q.week52High});
+  if (q.week52Low)  stats.push({l:'52W Lo',  v:'$'+q.week52Low});
+  if (q.marketCap)  stats.push({l:'Mkt Cap', v:q.marketCap});
+  if (q.pe)         stats.push({l:'P/E',     v:q.pe});
+  if (q.volume)     stats.push({l:'Volume',  v:q.volume});
+
+  var statsHtml = stats.map(function(s) {
+    return '<div class="q-stat"><span class="q-stat-l">'+s.l+'</span><span class="q-stat-v">'+s.v+'</span></div>';
+  }).join('');
 
   inner.innerHTML =
-    '<div class="quote-ticker-name">' +
-      '<div class="quote-symbol">' + q.ticker + '</div>' +
-      '<div class="quote-name">' + (q.name || '') + '</div>' +
-    '</div>' +
-    '<div class="quote-price">$' + (q.price || '–') + '</div>' +
-    '<div class="quote-change ' + changeClass + '">' +
-      arrow + ' ' + changeSign + (q.change || '0') +
-      ' (' + changeSign + (q.changePct || '0') + '%)' +
-    '</div>' +
-    '<div class="quote-stats">' +
-      stats.map(s =>
-        '<div class="quote-stat">' +
-          '<span class="quote-stat-label">' + s.label + '</span>' +
-          '<span class="quote-stat-value">' + s.value + '</span>' +
-        '</div>'
-      ).join('') +
-    '</div>' +
-    '<div class="quote-live-dot" title="Live market data"></div>';
+    '<div><div class="q-sym">'+q.ticker+'</div><div class="q-name">'+(q.name||'')+'</div></div>' +
+    '<div class="q-price">$'+q.price+'</div>' +
+    '<div class="q-chg '+cls+'">'+arrow+' '+sign+q.change+' ('+sign+q.changePct+'%)</div>' +
+    '<div class="q-stats">'+statsHtml+'</div>' +
+    '<div class="q-dot" title="Live data"></div>';
 
   banner.style.display = 'block';
 }
 
-function buildLivePrompt(ticker, quote) {
-  const base = buildPrompt(ticker);
-  if (!quote) return base;
+function buildPrompt(sym, q) {
+  var liveBlock = '';
+  if (q && q.price) {
+    var mkt = q.marketState === 'REGULAR' ? 'Market OPEN' : q.marketState === 'PRE' ? 'Pre-market' : q.marketState === 'POST' ? 'After-hours' : '';
+    liveBlock =
+      'LIVE MARKET DATA for ' + sym + ' (fetched ' + new Date().toUTCString() + '):\n' +
+      '- Current Price: $' + q.price + (mkt ? ' [' + mkt + ']' : '') + '\n' +
+      (q.change    ? '- Today\'s Change: ' + (parseFloat(q.change)>=0?'+':'') + q.change + ' (' + (parseFloat(q.changePct)>=0?'+':'') + q.changePct + '%)\n' : '') +
+      (q.open      ? '- Open: $'     + q.open      + '\n' : '') +
+      (q.high      ? '- Day High: $' + q.high      + '\n' : '') +
+      (q.low       ? '- Day Low: $'  + q.low       + '\n' : '') +
+      (q.week52High? '- 52W High: $' + q.week52High + '\n' : '') +
+      (q.week52Low ? '- 52W Low: $'  + q.week52Low  + '\n' : '') +
+      (q.marketCap ? '- Market Cap: ' + q.marketCap + '\n' : '') +
+      (q.pe        ? '- P/E (TTM): '  + q.pe        + '\n' : '') +
+      (q.volume    ? '- Volume: '     + q.volume     + '\n' : '') +
+      'Use ONLY these live prices. Do not substitute training-data prices.\n\n';
+  }
 
-  const mktState = quote.marketState === 'REGULAR' ? 'Market is OPEN' :
-                   quote.marketState === 'PRE'     ? 'Pre-market session' :
-                   quote.marketState === 'POST'    ? 'After-hours session' : '';
-
-  const liveData =
-    '**LIVE MARKET DATA (as of ' + new Date().toUTCString() + '):**\n' +
-    '- Current Price: $' + quote.price + ' ' + (mktState ? '(' + mktState + ')' : '') + '\n' +
-    (quote.change    ? '- Change Today: ' + (parseFloat(quote.change) >= 0 ? '+' : '') + quote.change + ' (' + quote.changePct + '%)\n' : '') +
-    (quote.open      ? '- Open: $'       + quote.open      + '\n' : '') +
-    (quote.high      ? '- Day High: $'   + quote.high      + '\n' : '') +
-    (quote.low       ? '- Day Low: $'    + quote.low       + '\n' : '') +
-    (quote.week52High? '- 52W High: $'   + quote.week52High + '\n' : '') +
-    (quote.week52Low ? '- 52W Low: $'    + quote.week52Low  + '\n' : '') +
-    (quote.marketCap ? '- Market Cap: '  + quote.marketCap  + '\n' : '') +
-    (quote.pe        ? '- P/E (TTM): '   + quote.pe         + '\n' : '') +
-    (quote.volume    ? '- Volume: '      + quote.volume     + '\n' : '') +
-    '\nUse these LIVE prices in your analysis. Do NOT use outdated training data for current price or valuation metrics.\n\n';
-
-  return liveData + base;
+  return liveBlock +
+    'You are an elite stock analyst. Write a rigorous 10-section investment report for ' + sym + '. ' +
+    'Use markdown headers (##), bullet points, and tables.\n\n' +
+    '## 🎯 1. Executive Summary\n' +
+    '- 2-3 sentence investment thesis\n' +
+    '- Composite Score: X/30 | Conviction: HIGH / MEDIUM / LOW / AVOID\n' +
+    '- Verdict (under 12 words):\n\n' +
+    '## 🏢 2. Company Overview\n' +
+    '- Business model, moat, key revenue drivers\n' +
+    '- Top strategic priority\n\n' +
+    '## ⚔️ 3. Peer Comparison\n' +
+    '| Metric | ' + sym + ' | Peer 1 | Peer 2 |\n' +
+    '|---|---|---|---|\n' +
+    '| P/E | | | |\n' +
+    '| Rev Growth | | | |\n' +
+    '| Op Margin | | | |\n\n' +
+    '## 📊 4. Financial Fundamentals (Score: X/10)\n' +
+    '- EPS growth, PE/PEG, ROE, FCF, debt — 5 bullets with numbers\n\n' +
+    '## 🌊 5. Institutional & Sentiment\n' +
+    '- Institutional flows, insider activity, short interest, analyst consensus\n\n' +
+    '## 📈 6. Technical Analysis\n' +
+    '- Trend, support/resistance, RSI/MACD, volume\n\n' +
+    '## ⚡ 7. Catalysts\n' +
+    '- Top 3 upcoming catalysts with expected impact\n\n' +
+    '## ⚠️ 8. Risks\n' +
+    '- Top 3 risks with severity and iron stop-loss price\n\n' +
+    '## 🎲 9. Trading Strategy\n' +
+    '- 30d/90d upside probability (%), price targets, position size, entry zone\n\n' +
+    '## 📋 10. Scorecard\n' +
+    '| Dimension | Score | Rationale |\n' +
+    '|---|---|---|\n' +
+    '| Performance | X/5 | |\n' +
+    '| Valuation | X/5 | |\n' +
+    '| Growth | X/5 | |\n' +
+    '| Profitability | X/5 | |\n' +
+    '| Technical | X/5 | |\n' +
+    '| Risk | X/5 | |\n' +
+    '| **TOTAL** | **X/30** | |';
 }
 
-// ── MAIN ANALYSIS ─────────────────────────────────────────────────────────────
-async function runAnalysis() {
-  const raw = document.getElementById('ticker-input').value.trim().toUpperCase();
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
+async function run() {
+  var raw = document.getElementById('ticker-input').value.trim().toUpperCase();
   if (!raw) return;
 
-  currentTicker = raw;
-  fullReportText = '';
+  ticker = raw;
+  reportText = '';
 
-  const btn = document.getElementById('analyze-btn');
+  var btn = document.getElementById('analyze-btn');
   btn.disabled = true;
-  btn.textContent = 'Fetching live data...';
-  document.getElementById('loading-ticker').textContent = raw;
+  btn.textContent = 'Fetching data...';
+  document.getElementById('load-tick').textContent = raw;
   document.getElementById('quote-banner').style.display = 'none';
-  setState('loading');
+  show('loading');
 
-  // Step 1: fetch live quote in parallel with starting the loading UI
-  let quote = null;
-  try {
-    quote = await fetchQuote(raw);
-    if (quote) renderQuoteBanner(quote);
-  } catch (_) { /* quote failure never blocks analysis */ }
+  // Fetch live quote
+  var quote = null;
+  try { quote = await getQuote(raw); } catch(e) {}
 
   btn.textContent = 'Analyzing...';
 
   try {
-    const response = await fetch('/api/analyze', {
+    var resp = await fetch('/api/analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 4000,
-        messages: [{ role: 'user', content: buildLivePrompt(raw, quote) }]
+        messages: [{role:'user', content: buildPrompt(raw, quote)}]
       })
     });
 
-    const data = await response.json();
+    var data = await resp.json();
 
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'HTTP ' + response.status);
+    if (!resp.ok) {
+      throw new Error(data.error && data.error.message ? data.error.message : 'HTTP ' + resp.status);
     }
 
-    fullReportText = (data.content || [])
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('\n\n');
+    var blocks = data.content || [];
+    var texts = [];
+    for (var i = 0; i < blocks.length; i++) {
+      if (blocks[i].type === 'text') texts.push(blocks[i].text);
+    }
+    reportText = texts.join('\n\n');
 
-    if (!fullReportText.trim()) {
-      throw new Error('No content in response. stop_reason: ' + (data.stop_reason || 'unknown'));
+    if (!reportText.trim()) {
+      throw new Error('No content returned. stop_reason: ' + (data.stop_reason || 'unknown'));
     }
 
-    // Render results
-    document.getElementById('results-ticker-label').textContent = raw;
-    document.getElementById('results-timestamp').textContent =
-      new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) + ' · APEX Intelligence';
+    // Show quote banner
+    showQuote(quote);
 
-    const sections = parseSections(fullReportText);
+    // Render report header
+    document.getElementById('res-ticker').textContent = raw;
+    document.getElementById('res-ts').textContent =
+      new Date().toLocaleString('en-US', {dateStyle:'medium', timeStyle:'short'}) + ' · APEX Intelligence';
+
+    // Render sections
+    var sections = parseSections(reportText);
     if (sections.length > 0) {
-      buildSectionCards(sections);
+      renderSections(sections);
     } else {
-      document.getElementById('sections-layout').innerHTML =
-        '<div class="section-card">' +
-          '<div class="section-header" onclick="toggleSection(this.parentElement)">' +
-            '<div class="section-title-row">' +
-              '<span class="section-icon">📋</span>' +
-              '<span class="section-title">Full Analysis Report</span>' +
-              '<span class="section-badge">COMPLETE</span>' +
-            '</div>' +
-            '<span class="section-chevron">▾</span>' +
+      document.getElementById('sections').innerHTML =
+        '<div class="sc">' +
+          '<div class="sc-hdr" onclick="toggle(this.parentElement)">' +
+            '<div class="sc-left"><span class="sc-icon">📋</span><span class="sc-title">Full Report</span><span class="sc-badge">COMPLETE</span></div>' +
+            '<span class="sc-chev">▾</span>' +
           '</div>' +
-          '<div class="section-body raw-content">' + fullReportText.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' +
+          '<div class="sc-body"><pre style="white-space:pre-wrap;font-size:13px">'+reportText+'</pre></div>' +
         '</div>';
     }
 
-    setState('results');
+    show('results');
 
-  } catch (err) {
-    document.getElementById('error-msg').textContent = err.message || 'Unknown error';
-    setState('error');
+  } catch(err) {
+    document.getElementById('err-msg').textContent = err.message || 'Unknown error';
+    show('error-box');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Run Analysis →';
   }
 }
 
-// ── FEEDBACK ──────────────────────────────────────────────────────────────────
-function showFeedback() {
-  const w = document.getElementById('feedback-widget');
-  if (w) { w.style.display = 'block'; w.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-}
-
-function skipFeedback() {
-  const w = document.getElementById('feedback-widget');
-  if (w) w.style.display = 'none';
-}
-
-function setStar(n) {
-  selectedRating = n;
-  for (let i = 1; i <= 5; i++) {
-    const s = document.getElementById('star-' + i);
-    if (s) s.classList.toggle('active', i <= n);
-  }
-}
-
-function toggleTag(el) {
-  el.classList.toggle('selected');
-  const tag = el.textContent.trim();
-  if (el.classList.contains('selected')) {
-    if (!selectedTags.includes(tag)) selectedTags.push(tag);
-  } else {
-    selectedTags = selectedTags.filter(t => t !== tag);
-  }
-}
-
-async function submitFeedback() {
-  const btn = document.getElementById('feedback-submit-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
-  try {
-    await fetch('/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        'form-name': 'apex-feedback',
-        ticker: currentTicker,
-        rating: selectedRating ? selectedRating + '/5' : 'Not rated',
-        tags: selectedTags.join(', ') || 'None',
-        comment: (document.getElementById('feedback-comment') || {}).value || '',
-        email: (document.getElementById('feedback-email') || {}).value || '',
-        timestamp: new Date().toISOString(),
-      }).toString()
-    });
-  } catch (_) {}
-  const fbody = document.getElementById('feedback-form-body');
-  const fsuccess = document.getElementById('feedback-success');
-  if (fbody) fbody.style.display = 'none';
-  if (fsuccess) fsuccess.style.display = 'block';
-}
-
-// ── KEYBOARD ──────────────────────────────────────────────────────────────────
-document.getElementById('ticker-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') runAnalysis();
+document.getElementById('ticker-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') run();
 });
 </script>
 </body>
