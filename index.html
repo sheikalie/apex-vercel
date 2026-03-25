@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX · Investment Intelligence Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #0a0c0f;
+    --bg-card: #0f1216;
+    --bg-elevated: #141820;
+    --bg-hover: #1a2030;
+    --border: #1e2535;
+    --border-subtle: #161c28;
+    --gold: #c9a84c;
+    --gold-dim: #8a6e2f;
+    --gold-bright: #e8c96a;
+    --gold-glow: rgba(201,168,76,0.12);
+    --text-primary: #e8e4d8;
+    --text-secondary: #8a9ab5;
+    --text-muted: #4a5568;
+    --text-data: #c0cce0;
+    --accent-blue: #3a7bd5;
+    --accent-green: #2ecc71;
+    --accent-red: #e74c3c;
+    --accent-amber: #f39c12;
+    --accent-teal: #1abc9c;
+    --radius: 6px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app-shell {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 32px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 48px;
+  }
+
+  .logo-mark { display: flex; align-items: center; gap: 12px; }
+
+  .logo-diamond {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: 0.12em; color: var(--gold);
+  }
+
+  .logo-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--text-muted); letter-spacing: 0.2em; margin-top: 2px;
+  }
+
+  .header-right {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted);
+  }
+
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent-green);
+    box-shadow: 0 0 6px var(--accent-green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .hero-section { text-align: center; margin-bottom: 52px; }
+
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.3em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 20px;
+  }
+
+  .hero-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1;
+    color: var(--text-primary); margin-bottom: 16px;
+  }
+
+  .hero-title span { color: var(--gold); }
+
+  .hero-subtitle {
+    font-size: 15px; color: var(--text-secondary);
+    max-width: 560px; margin: 0 auto 40px; line-height: 1.7;
+  }
+
+  .search-container {
+    display: flex; align-items: center;
+    max-width: 560px; margin: 0 auto;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 6px 6px 6px 20px; gap: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-container:focus-within {
+    border-color: var(--gold-dim);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+  }
+
+  .ticker-prefix {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: var(--text-muted); flex-shrink: 0;
+  }
+
+  #ticker-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600;
+    color: var(--text-primary); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  #ticker-input::placeholder { color: var(--text-muted); font-weight: 300; }
+
+  .analyze-btn {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    border: none; border-radius: 4px; padding: 12px 24px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    color: #0a0c0f; cursor: pointer; letter-spacing: 0.04em;
+    transition: all 0.2s; flex-shrink: 0; white-space: nowrap;
+  }
+
+  .analyze-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+  }
+
+  .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .quick-tickers {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; margin-top: 16px; flex-wrap: wrap;
+  }
+
+  .quick-label { font-size: 12px; color: var(--text-muted); }
+
+  .quick-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 4px 10px; background: var(--bg-elevated);
+    border: 1px solid var(--border); border-radius: 3px;
+    color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+  }
+
+  .quick-chip:hover { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+
+  .dimensions-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 48px;
+  }
+
+  @media (max-width: 768px) { .dimensions-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .dim-card {
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius); padding: 16px; text-align: center;
+  }
+
+  .dim-icon { font-size: 20px; margin-bottom: 8px; }
+  .dim-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; line-height: 1.4; }
+
+  #loading-state { display: none; }
+
+  .loading-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 32px;
+    padding: 20px 24px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    border-left: 3px solid var(--gold);
+  }
+
+  .loading-spinner {
+    width: 24px; height: 24px;
+    border: 2px solid var(--border); border-top-color: var(--gold);
+    border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text { font-size: 14px; color: var(--text-secondary); }
+  .loading-ticker { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--gold); }
+
+  .loading-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+
+  .loading-step {
+    height: 80px; background: var(--bg-card);
+    border: 1px solid var(--border-subtle); border-radius: var(--radius);
+    overflow: hidden; position: relative;
+  }
+
+  .loading-step::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.05), transparent);
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+
+  #results-container { display: none; }
+
+  .results-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 32px; gap: 24px; flex-wrap: wrap;
+  }
+
+  .results-ticker-block { display: flex; align-items: center; gap: 16px; }
+
+  .results-ticker {
+    font-family: 'Libre Baskerville', serif; font-size: 42px;
+    font-weight: 700; color: var(--gold); line-height: 1;
+  }
+
+  .results-meta { display: flex; flex-direction: column; gap: 4px; }
+
+  .results-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase;
+  }
+
+  .results-timestamp { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-secondary); }
+
+  .results-actions { display: flex; gap: 8px; }
+
+  .btn-outline {
+    background: transparent; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 8px 16px; font-size: 13px; color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+
+  .btn-outline:hover { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+
+  .sections-layout { display: flex; flex-direction: column; gap: 16px; }
+
+  .section-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; transition: border-color 0.2s;
+  }
+
+  .section-card:hover { border-color: var(--gold-dim); }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; cursor: pointer; user-select: none;
+    background: var(--bg-elevated); border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .section-title-row { display: flex; align-items: center; gap: 12px; }
+  .section-icon { font-size: 18px; width: 32px; text-align: center; }
+
+  .section-title { font-family: 'Libre Baskerville', serif; font-size: 15px; font-weight: 700; color: var(--text-primary); }
+
+  .section-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 2px 8px; background: var(--gold-glow);
+    border: 1px solid var(--gold-dim); border-radius: 3px;
+    color: var(--gold); letter-spacing: 0.05em;
+  }
+
+  .section-chevron { color: var(--text-muted); font-size: 12px; transition: transform 0.2s; }
+  .section-card.collapsed .section-chevron { transform: rotate(-90deg); }
+
+  .section-body {
+    padding: 24px; font-size: 14px; line-height: 1.8;
+    color: var(--text-secondary); transition: all 0.2s;
+  }
+
+  .section-card.collapsed .section-body { display: none; }
+
+  .section-body h1,.section-body h2,.section-body h3,.section-body h4 {
+    font-family: 'Libre Baskerville', serif; color: var(--text-primary);
+    margin: 20px 0 10px; font-size: 15px;
+  }
+
+  .section-body h1:first-child,.section-body h2:first-child,.section-body h3:first-child { margin-top: 0; }
+  .section-body strong { color: var(--text-data); font-weight: 600; }
+  .section-body em { color: var(--gold); font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .section-body ul,.section-body ol { padding-left: 20px; margin: 10px 0; }
+  .section-body li { margin: 6px 0; padding-left: 4px; }
+  .section-body li::marker { color: var(--gold-dim); }
+  .section-body p { margin: 10px 0; }
+  .section-body p:first-child { margin-top: 0; }
+
+  .section-body code {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    padding: 1px 6px; border-radius: 3px; color: var(--gold);
+  }
+
+  .section-body pre {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; overflow-x: auto; margin: 12px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-data);
+  }
+
+  .section-body table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+
+  .section-body th {
+    background: var(--bg-elevated); color: var(--gold);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border);
+  }
+
+  .section-body td { padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); }
+  .section-body tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
+
+  #error-state {
+    display: none; background: var(--bg-card);
+    border: 1px solid rgba(231,76,60,0.3); border-left: 3px solid var(--accent-red);
+    border-radius: var(--radius); padding: 20px 24px;
+  }
+
+  .error-title { color: var(--accent-red); font-weight: 600; margin-bottom: 6px; }
+  .error-msg { font-size: 13px; color: var(--text-secondary); }
+
+  .footer-disclaimer {
+    margin-top: 48px; padding: 16px 20px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius); font-size: 11px; color: var(--text-muted);
+    line-height: 1.6; text-align: center;
+  }
+
+  .raw-content {
+    font-size: 14px; line-height: 1.8; color: var(--text-secondary);
+    white-space: pre-wrap; font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ── FEEDBACK WIDGET ── */
+  #feedback-widget {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-top: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #feedback-widget::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-dim));
+  }
+
+  .feedback-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .feedback-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 16px; font-weight: 700; color: var(--text-primary);
+  }
+
+  .feedback-sub {
+    font-size: 12px; color: var(--text-muted); margin-top: 2px;
+  }
+
+  .feedback-skip {
+    font-size: 12px; color: var(--text-muted); cursor: pointer;
+    background: none; border: none; font-family: 'DM Sans', sans-serif;
+    transition: color 0.15s; padding: 4px 8px;
+  }
+
+  .feedback-skip:hover { color: var(--text-secondary); }
+
+  /* Star rating */
+  .stars-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 20px;
+  }
+
+  .stars-label {
+    font-size: 13px; color: var(--text-secondary); margin-right: 8px;
+  }
+
+  .star {
+    font-size: 28px; cursor: pointer; transition: transform 0.1s;
+    opacity: 0.3; filter: grayscale(1);
+    background: none; border: none; padding: 2px;
+    line-height: 1;
+  }
+
+  .star.active, .star:hover { opacity: 1; filter: grayscale(0); transform: scale(1.15); }
+  .star.active ~ .star { opacity: 0.3; filter: grayscale(1); transform: none; }
+
+  /* Tag chips */
+  .tags-row {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+  }
+
+  .feedback-tag {
+    font-size: 12px; padding: 5px 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+
+  .feedback-tag.selected {
+    background: var(--gold-glow);
+    border-color: var(--gold-dim);
+    color: var(--gold);
+  }
+
+  /* Text area */
+  .feedback-textarea {
+    width: 100%; background: var(--bg-elevated);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 16px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--text-primary);
+    resize: vertical; min-height: 80px;
+    outline: none; transition: border-color 0.2s;
+    margin-bottom: 16px;
+  }
+
+  .feedback-textarea:focus { border-color: var(--gold-dim); }
+  .feedback-textarea::placeholder { color: var(--text-muted); }
+
+  /* Email row */
+  .feedback-email-row {
+    display: flex; gap: 12px; margin-bottom: 16px; align-items: center;
+  }
+
+  .feedback-email {
+    flex: 1; background: var(--bg-elevated);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 10px 14px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--text-primary);
+    outline: none; transition: border-color 0.2s;
+  }
+
+  .feedback-email:focus { border-color: var(--gold-dim); }
+  .feedback-email::placeholder { color: var(--text-muted); }
+
+  .feedback-email-note { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+
+  /* Submit */
+  .feedback-submit {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    border: none; border-radius: 4px;
+    padding: 10px 22px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    color: #0a0c0f; cursor: pointer; transition: all 0.2s;
+  }
+
+  .feedback-submit:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    box-shadow: 0 4px 14px rgba(201,168,74,0.3);
+  }
+
+  .feedback-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Success */
+  .feedback-success {
+    display: none; text-align: center; padding: 16px 0;
+  }
+
+  .feedback-success-icon { font-size: 36px; margin-bottom: 8px; }
+  .feedback-success-title { font-size: 16px; font-weight: 600; color: var(--accent-green); margin-bottom: 4px; }
+  .feedback-success-sub { font-size: 13px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <header>
+    <div class="logo-mark">
+      <div class="logo-diamond"></div>
+      <div>
+        <div class="logo-text">APEX</div>
+        <div class="logo-sub">Investment Intelligence Terminal</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-dot"></div>
+      <span>LIVE · AI-POWERED</span>
+    </div>
+  </header>
+
+  <div class="hero-section">
+    <div class="hero-eyebrow">Institutional-Grade Analysis</div>
+    <h1 class="hero-title">
+      Analyze Any Stock with<br><span>Elite-Level Precision</span>
+    </h1>
+    <p class="hero-subtitle">
+      Combining PE fund manager rigor, McKinsey strategic frameworks, and quantitative factor research — synthesized into one unified intelligence report.
+    </p>
+
+    <div class="search-container">
+      <span class="ticker-prefix">$</span>
+      <input id="ticker-input" type="text" placeholder="NVDA" maxlength="10" autocomplete="off" spellcheck="false">
+      <button class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">Run Analysis →</button>
+    </div>
+
+    <div class="quick-tickers">
+      <span class="quick-label">Quick access:</span>
+      <span class="quick-chip" onclick="setTicker('NVDA')">NVDA</span>
+      <span class="quick-chip" onclick="setTicker('AAPL')">AAPL</span>
+      <span class="quick-chip" onclick="setTicker('MSFT')">MSFT</span>
+      <span class="quick-chip" onclick="setTicker('PLTR')">PLTR</span>
+      <span class="quick-chip" onclick="setTicker('TSLA')">TSLA</span>
+      <span class="quick-chip" onclick="setTicker('AMZN')">AMZN</span>
+      <span class="quick-chip" onclick="setTicker('IBM')">IBM</span>
+    </div>
+  </div>
+
+  <div class="dimensions-grid" id="dimensions-grid">
+    <div class="dim-card"><div class="dim-icon">📊</div><div class="dim-label">Fundamental<br>Hardcore Score</div></div>
+    <div class="dim-card"><div class="dim-icon">🌊</div><div class="dim-label">Capital Flow<br>Intelligence</div></div>
+    <div class="dim-card"><div class="dim-icon">📈</div><div class="dim-label">Technical &amp;<br>Quant Analysis</div></div>
+    <div class="dim-card"><div class="dim-icon">⚡</div><div class="dim-label">Policy &amp;<br>Catalyst Scan</div></div>
+    <div class="dim-card"><div class="dim-icon">🎲</div><div class="dim-label">Trading Strategy<br>&amp; Probability</div></div>
+  </div>
+
+  <div id="loading-state">
+    <div class="loading-header">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">
+        Conducting deep analysis on <span class="loading-ticker" id="loading-ticker">—</span>
+        &nbsp;·&nbsp; Pulling SEC filings, market data, institutional flows, technicals...
+      </div>
+    </div>
+    <div class="loading-steps">
+      <div class="loading-step"></div>
+      <div class="loading-step" style="animation-delay:0.15s"></div>
+      <div class="loading-step" style="animation-delay:0.3s"></div>
+      <div class="loading-step" style="animation-delay:0.45s"></div>
+      <div class="loading-step" style="animation-delay:0.6s"></div>
+    </div>
+  </div>
+
+  <div id="error-state">
+    <div class="error-title">Analysis Failed</div>
+    <div class="error-msg" id="error-msg">An error occurred. Please try again.</div>
+    <div id="error-hints" style="margin-top:14px;display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <div id="results-container">
+    <div class="results-header">
+      <div class="results-ticker-block">
+        <div class="results-ticker" id="results-ticker-label">—</div>
+        <div class="results-meta">
+          <div class="results-label">Analysis Report</div>
+          <div class="results-timestamp" id="results-timestamp">—</div>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="btn-outline" onclick="collapseAll()">Collapse All</button>
+        <button class="btn-outline" onclick="expandAll()">Expand All</button>
+        <button class="btn-outline" onclick="copyReport()">Copy Report</button>
+        <button class="btn-outline" onclick="resetApp()">← New Analysis</button>
+      </div>
+    </div>
+    <div class="sections-layout" id="sections-layout"></div>
+  </div>
+
+  <!-- FEEDBACK WIDGET -->
+  <div id="feedback-widget">
+    <div class="feedback-header">
+      <div>
+        <div class="feedback-title">How was this analysis?</div>
+        <div class="feedback-sub">Your feedback shapes what APEX becomes. Takes 30 seconds.</div>
+      </div>
+      <button class="feedback-skip" onclick="skipFeedback()">Skip ×</button>
+    </div>
+    <div id="feedback-form-body">
+      <div class="stars-row">
+        <span class="stars-label">Overall quality:</span>
+        <button class="star" onclick="setStar(1)" id="star-1">⭐</button>
+        <button class="star" onclick="setStar(2)" id="star-2">⭐</button>
+        <button class="star" onclick="setStar(3)" id="star-3">⭐</button>
+        <button class="star" onclick="setStar(4)" id="star-4">⭐</button>
+        <button class="star" onclick="setStar(5)" id="star-5">⭐</button>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">What stood out? (pick any)</div>
+      <div class="tags-row" id="tags-row">
+        <div class="feedback-tag" onclick="toggleTag(this)">📊 Fundamentals were sharp</div>
+        <div class="feedback-tag" onclick="toggleTag(this)">📈 Technicals were useful</div>
+        <div class="feedback-tag" onclick="toggleTag(this)">🎯 Verdict felt accurate</div>
+        <div class="feedback-tag" onclick="toggleTag(this)">⚡ Catalysts section great</div>
+        <div class="feedback-tag" onclick="toggleTag(this)">🐌 Took too long</div>
+        <div class="feedback-tag" onclick="toggleTag(this)">🌊 Capital flows section weak</div>
+        <div class="feedback-tag" onclick="toggleTag(this)">📉 Scores seemed off</div>
+        <div class="feedback-tag" onclick="toggleTag(this)">🔁 Would use again</div>
+      </div>
+      <textarea class="feedback-textarea" id="feedback-comment" placeholder="Anything else? What would make this more useful for your investing process?"></textarea>
+      <div class="feedback-email-row">
+        <input type="email" class="feedback-email" id="feedback-email" placeholder="Email (optional — to follow up with you)">
+        <span class="feedback-email-note">Optional</span>
+      </div>
+      <button class="feedback-submit" id="feedback-submit-btn" onclick="submitFeedback()">Send Feedback →</button>
+    </div>
+    <div class="feedback-success" id="feedback-success">
+      <div class="feedback-success-icon">🙏</div>
+      <div class="feedback-success-title">Thank you — seriously.</div>
+      <div class="feedback-success-sub">Every response directly shapes what APEX becomes. You're helping build something real.</div>
+    </div>
+  </div>
+
+  <!-- Hidden Netlify Forms for form detection -->
+  <form name="apex-feedback" netlify netlify-honeypot="bot-field" style="display:none">
+    <input name="bot-field"><input name="ticker"><input name="rating">
+    <input name="tags"><input name="comment"><input name="email"><input name="timestamp">
+  </form>
+  <form name="beta-signup" netlify netlify-honeypot="bot-field" style="display:none">
+    <input name="bot-field"><input name="email">
+  </form>
+
+  <div class="footer-disclaimer">
+    ⚠️ This analysis is generated by AI for informational and educational purposes only. It does not constitute financial advice, investment recommendations, or solicitation to buy or sell any securities. Always conduct your own due diligence and consult a licensed financial advisor before making investment decisions. Past performance is not indicative of future results.
+    &nbsp;·&nbsp; <a href="beta.html" style="color:var(--text-muted);text-decoration:none">About the Beta</a>
+  </div>
+
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let currentTicker = '';
+let fullReportText = '';
+
+// ─── MASTER PROMPT ────────────────────────────────────────────────────────────
+function buildPrompt(ticker) {
+  return `You are an elite stock analyst. Produce a concise but rigorous 10-section investment report for **${ticker}**. Use your training knowledge. Be specific with numbers where you know them. Use markdown headers (##), bullets, and tables.
+
+## 🎯 1. Executive Summary
+- Investment thesis in 2–3 sentences
+- **Composite Score:** X/30 | **Conviction:** HIGH / MEDIUM / LOW / AVOID
+- **Verdict (≤12 words):**
+
+## 🏢 2. Company Overview
+- Business model, moat, key revenue drivers (3–4 bullets)
+- Top strategic priority right now
+
+## ⚔️ 3. Peer Comparison
+| Metric | ${ticker} | Peer 1 | Peer 2 |
+|---|---|---|---|
+| P/E | | | |
+| Rev Growth | | | |
+| Op Margin | | | |
+
+## 📊 4. Financial Fundamentals (Score: X/10)
+- EPS growth forecast, PE/PEG, ROE, FCF, debt ratio (5 bullets with numbers)
+
+## 🌊 5. Institutional & Sentiment
+- Institutional ownership trend, insider activity, short interest, analyst consensus (4 bullets)
+
+## 📈 6. Technical Analysis
+- Trend structure, key support/resistance, RSI/MACD state, volume (4 bullets)
+
+## ⚡ 7. Catalysts
+- Top 3 upcoming catalysts with expected impact
+
+## ⚠️ 8. Risks
+- Top 3 risks with severity (High/Med/Low) and iron stop-loss price
+
+## 🎲 9. Trading Strategy
+- 30d / 90d upside probability (%), price target range, position size recommendation, entry zone
+
+## 📋 10. Scorecard
+| Dimension | Score | Rationale |
+|---|---|---|
+| Performance | X/5 | |
+| Valuation | X/5 | |
+| Growth | X/5 | |
+| Profitability | X/5 | |
+| Technical | X/5 | |
+| Risk | X/5 | |
+| **TOTAL** | **X/30** | |`;
+}
+
+// ─── SECTION DEFINITIONS ─────────────────────────────────────────────────────
+const SECTION_DEFS = [
+  { emoji: '🎯', title: 'Executive Summary', badge: 'OVERVIEW' },
+  { emoji: '🏢', title: 'Company Overview & Strategic Context', badge: 'STRATEGY' },
+  { emoji: '⚔️', title: 'Peer & Sector Comparison', badge: 'COMPETITIVE' },
+  { emoji: '📊', title: 'Financial Fundamentals', badge: 'FUNDAMENTALS' },
+  { emoji: '🌊', title: 'Capital Flow & Institutional Intelligence', badge: 'FLOWS' },
+  { emoji: '📈', title: 'Technical & Quantitative Analysis', badge: 'TECHNICALS' },
+  { emoji: '⚡', title: 'Catalysts & Policy Tailwinds', badge: 'CATALYSTS' },
+  { emoji: '⚠️', title: 'Risks & Mitigation', badge: 'RISK' },
+  { emoji: '🎲', title: 'Trading Strategy & Probability', badge: 'STRATEGY' },
+  { emoji: '📋', title: 'Investment Scorecard', badge: 'SCORECARD' },
+];
+
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
+function setTicker(t) {
+  document.getElementById('ticker-input').value = t;
+  document.getElementById('ticker-input').focus();
+}
+
+function setState(s) {
+  document.getElementById('loading-state').style.display  = s === 'loading'  ? 'block' : 'none';
+  document.getElementById('results-container').style.display = s === 'results' ? 'block' : 'none';
+  document.getElementById('error-state').style.display   = s === 'error'   ? 'block' : 'none';
+  document.getElementById('dimensions-grid').style.display = s === 'idle'  ? 'grid'  : 'none';
+}
+
+function resetApp() {
+  setState('idle');
+  document.getElementById('ticker-input').value = '';
+  document.getElementById('ticker-input').focus();
+}
+
+function collapseAll() { document.querySelectorAll('.section-card').forEach(c => c.classList.add('collapsed')); }
+function expandAll()   { document.querySelectorAll('.section-card').forEach(c => c.classList.remove('collapsed')); }
+
+async function copyReport() {
+  if (fullReportText) {
+    await navigator.clipboard.writeText(`APEX Investment Intelligence Report — ${currentTicker}\n\n${fullReportText}`);
+    const btn = event.target;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = 'Copy Report', 2000);
+  }
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, (_, header, rows) => {
+      const ths = header.split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('');
+      const trs = rows.trim().split('\n').map(row => {
+        const tds = row.split('|').filter(c => c.trim()).map(c => `<td>${c.trim()}</td>`).join('');
+        return `<tr>${tds}</tr>`;
+      }).join('');
+      return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+    })
+    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:16px 0">')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^([^<\n].+)$/gm, m => m.startsWith('<') || !m.trim() ? m : `<p>${m}</p>`);
+}
+
+function parseSections(text) {
+  const sections = [];
+  const lines = text.split('\n');
+  let current = null;
+  for (const line of lines) {
+    const h2 = line.match(/^##\s+(.+)$/);
+    if (h2) {
+      if (current) sections.push(current);
+      current = { heading: h2[1].trim(), content: [] };
+    } else if (current) {
+      current.content.push(line);
+    }
+  }
+  if (current) sections.push(current);
+  return sections;
+}
+
+function matchSectionDef(heading) {
+  for (const def of SECTION_DEFS) {
+    const a = heading.replace(/[^\w\s&]/gu, '').trim().toLowerCase();
+    const b = def.title.toLowerCase();
+    if (a.includes(b.slice(0, 8)) || b.includes(a.slice(0, 8))) return def;
+  }
+  return null;
+}
+
+function buildSectionCards(sections) {
+  const layout = document.getElementById('sections-layout');
+  layout.innerHTML = '';
+  sections.forEach((section, i) => {
+    const def = matchSectionDef(section.heading) || {
+      emoji: '📌',
+      title: section.heading.replace(/^\d+\.\s*/, '').replace(/[^\w\s&]/gu, '').trim(),
+      badge: 'SECTION'
+    };
+    const card = document.createElement('div');
+    card.className = 'section-card' + (i > 0 ? ' collapsed' : '');
+    card.innerHTML = `
+      <div class="section-header" onclick="toggleSection(this.parentElement)">
+        <div class="section-title-row">
+          <span class="section-icon">${def.emoji}</span>
+          <span class="section-title">${def.title}</span>
+          <span class="section-badge">${def.badge}</span>
+        </div>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">${renderMarkdown(section.content.join('\n'))}</div>`;
+    layout.appendChild(card);
+  });
+}
+
+function toggleSection(card) { card.classList.toggle('collapsed'); }
+
+// ─── MAIN ANALYSIS ────────────────────────────────────────────────────────────
+async function runAnalysis() {
+  const raw = document.getElementById('ticker-input').value.trim().toUpperCase();
+  if (!raw) return;
+
+  currentTicker = raw;
+  fullReportText = '';
+
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  document.getElementById('loading-ticker').textContent = raw;
+  setState('loading');
+
+  try {
+    // ── Call our secure proxy — API key never touches the browser ──────────────
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8000,
+        messages: [{ role: 'user', content: buildPrompt(raw) }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    // Collect all text blocks (web search results come back inline with text)
+    fullReportText = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n\n');
+
+    // If no text blocks but we have tool_result blocks, the search ran but model didn't respond
+    if (!fullReportText.trim()) {
+      const hasToolUse = (data.content || []).some(b => b.type === 'tool_use' || b.type === 'tool_result');
+      if (hasToolUse) {
+        throw new Error('Analysis started but produced no text output. Try again — this is usually a one-time timeout.');
+      }
+      const stopReason = data.stop_reason || 'unknown';
+      throw new Error('No content returned (stop_reason: ' + stopReason + '). Check your API key has billing enabled at console.anthropic.com');
+    }
+
+    // If response was cut short, still show what we got
+    if (data.stop_reason === 'max_tokens') {
+      fullReportText += '\n\n---\n*Note: Report was trimmed due to length. The analysis above is complete through the sections shown.*';
+    }
+
+    document.getElementById('results-ticker-label').textContent = raw;
+    document.getElementById('results-timestamp').textContent =
+      new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) + ' · APEX Intelligence';
+
+    const sections = parseSections(fullReportText);
+    if (sections.length > 0) {
+      buildSectionCards(sections);
+    } else {
+      document.getElementById('sections-layout').innerHTML = `
+        <div class="section-card">
+          <div class="section-header" onclick="toggleSection(this.parentElement)">
+            <div class="section-title-row">
+              <span class="section-icon">📋</span>
+              <span class="section-title">Full Analysis Report</span>
+              <span class="section-badge">COMPLETE</span>
+            </div>
+            <span class="section-chevron">▾</span>
+          </div>
+          <div class="section-body raw-content">${fullReportText}</div>
+        </div>`;
+    }
+
+    setState('results');
+
+    // Reset & reveal feedback widget after a short delay
+    selectedRating = 0; selectedTags = [];
+    ['feedback-form-body','feedback-success'].forEach((id,i) => {
+      document.getElementById(id).style.display = i===0 ? 'block' : 'none';
+    });
+    document.getElementById('feedback-comment').value = '';
+    document.getElementById('feedback-email').value = '';
+    document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.feedback-tag').forEach(t => t.classList.remove('selected'));
+    const fsb = document.getElementById('feedback-submit-btn');
+    fsb.disabled = false; fsb.textContent = 'Send Feedback →';
+    document.getElementById('feedback-widget').style.display = 'none';
+    setTimeout(showFeedback, 1400);
+
+  } catch (err) {
+    const msg = err.message || 'Unknown error';
+    document.getElementById('error-msg').textContent = msg;
+
+    // Show contextual hints based on error type
+    const hints = document.getElementById('error-hints');
+    hints.innerHTML = '';
+    const hintStyle = 'padding:10px 14px;border-radius:5px;font-size:12px;line-height:1.6;';
+
+    if (msg.includes('401') || msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('authentication')) {
+      hints.innerHTML = '<div style="' + hintStyle + 'background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);color:#f39c12">' +
+        '<strong>API Key Issue:</strong> Go to <strong>Netlify → Site configuration → Environment variables</strong> and confirm <code>ANTHROPIC_API_KEY</code> is set correctly, then trigger a new deploy.' +
+        '</div>';
+    } else if (msg.includes('402') || msg.toLowerCase().includes('billing') || msg.toLowerCase().includes('credit')) {
+      hints.innerHTML = '<div style="' + hintStyle + 'background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);color:#f39c12">' +
+        '<strong>Billing Issue:</strong> Your Anthropic account needs a payment method. Go to <strong>console.anthropic.com → Billing</strong> and add a credit card.' +
+        '</div>';
+    } else if (msg.includes('500') || msg.includes('502') || msg.includes('529')) {
+      hints.innerHTML = '<div style="' + hintStyle + 'background:rgba(58,123,213,0.1);border:1px solid rgba(58,123,213,0.3);color:#5a9bd8">' +
+        '<strong>Temporary Error:</strong> Anthropic's servers may be busy. Wait 30 seconds and try again. If it persists, check <strong>status.anthropic.com</strong>.' +
+        '</div>';
+    } else if (msg.includes('model')) {
+      hints.innerHTML = '<div style="' + hintStyle + 'background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);color:#f39c12">' +
+        '<strong>Model Error:</strong> The model name may be outdated. This has been fixed in the latest file update — re-upload <code>index.html</code> to GitHub.' +
+        '</div>';
+    }
+
+    setState('error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis →';
+  }
+}
+
+document.getElementById('ticker-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runAnalysis();
+});
+
+// ─── FEEDBACK WIDGET ─────────────────────────────────────────────────────────
+let selectedRating = 0;
+let selectedTags = [];
+
+function showFeedback() {
+  const w = document.getElementById('feedback-widget');
+  w.style.display = 'block';
+  w.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function skipFeedback() {
+  document.getElementById('feedback-widget').style.display = 'none';
+}
+
+function setStar(n) {
+  selectedRating = n;
+  for (let i = 1; i <= 5; i++) {
+    const s = document.getElementById('star-' + i);
+    s.classList.toggle('active', i <= n);
+  }
+}
+
+function toggleTag(el) {
+  el.classList.toggle('selected');
+  const tag = el.textContent.trim();
+  if (el.classList.contains('selected')) {
+    if (!selectedTags.includes(tag)) selectedTags.push(tag);
+  } else {
+    selectedTags = selectedTags.filter(t => t !== tag);
+  }
+}
+
+async function submitFeedback() {
+  const btn = document.getElementById('feedback-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  const payload = {
+    'form-name': 'apex-feedback',
+    ticker: currentTicker,
+    rating: selectedRating ? String(selectedRating) + '/5' : 'Not rated',
+    tags: selectedTags.join(', ') || 'None selected',
+    comment: document.getElementById('feedback-comment').value || '',
+    email: document.getElementById('feedback-email').value || '',
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    await fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(payload).toString(),
+    });
+  } catch (_) { /* fail silently */ }
+
+  document.getElementById('feedback-form-body').style.display = 'none';
+  document.getElementById('feedback-success').style.display = 'block';
+}
+</script>
+</body>
+</html>

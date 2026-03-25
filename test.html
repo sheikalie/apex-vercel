@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>APEX Diagnostics</title>
+<style>
+  body { font-family: monospace; background: #0a0c0f; color: #e8e4d8; padding: 40px; font-size: 14px; }
+  h1 { color: #c9a84c; margin-bottom: 8px; }
+  .sub { color: #8a9ab5; margin-bottom: 40px; font-size: 13px; }
+  .test { background: #0f1216; border: 1px solid #1e2535; border-radius: 6px; padding: 20px; margin-bottom: 16px; }
+  .test-title { font-weight: bold; color: #c9a84c; margin-bottom: 12px; font-size: 15px; }
+  .btn { background: #c9a84c; color: #0a0c0f; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-family: monospace; font-size: 13px; font-weight: bold; margin-right: 8px; }
+  .btn:hover { background: #e8c96a; }
+  .result { margin-top: 14px; padding: 14px; background: #141820; border-radius: 4px; white-space: pre-wrap; word-break: break-all; font-size: 12px; line-height: 1.6; min-height: 40px; color: #c0cce0; border-left: 3px solid #1e2535; }
+  .ok   { border-left-color: #2ecc71; color: #2ecc71; }
+  .fail { border-left-color: #e74c3c; color: #e74c3c; }
+  .warn { border-left-color: #f39c12; color: #f39c12; }
+  .pending { border-left-color: #c9a84c; color: #8a9ab5; }
+</style>
+</head>
+<body>
+
+<h1>APEX · Diagnostic Panel</h1>
+<p class="sub">Run each test in order to find exactly where the problem is.</p>
+
+<!-- TEST 1: Edge function reachable -->
+<div class="test">
+  <div class="test-title">TEST 1 · Is the /api/analyze edge function reachable?</div>
+  <p style="color:#8a9ab5;font-size:12px;margin-bottom:12px">Sends a simple POST to /api/analyze and checks if the function responds at all (even with an error).</p>
+  <button class="btn" onclick="test1()">Run Test 1</button>
+  <div class="result pending" id="r1">Not run yet</div>
+</div>
+
+<!-- TEST 2: API key present -->
+<div class="test">
+  <div class="test-title">TEST 2 · Does the API key reach Anthropic?</div>
+  <p style="color:#8a9ab5;font-size:12px;margin-bottom:12px">Sends the smallest possible valid request to Anthropic — just "Say hi" — to confirm the key works and billing is active.</p>
+  <button class="btn" onclick="test2()">Run Test 2</button>
+  <div class="result pending" id="r2">Not run yet</div>
+</div>
+
+<!-- TEST 3: Full prompt (no tools) -->
+<div class="test">
+  <div class="test-title">TEST 3 · Does a real analysis prompt return text?</div>
+  <p style="color:#8a9ab5;font-size:12px;margin-bottom:12px">Sends a short version of the analysis prompt for IBM. Confirms text is returned and the model is responding correctly.</p>
+  <button class="btn" onclick="test3()">Run Test 3</button>
+  <div class="result pending" id="r3">Not run yet</div>
+</div>
+
+<!-- TEST 4: Full prompt with max tokens -->
+<div class="test">
+  <div class="test-title">TEST 4 · Full analysis — does it complete without timeout?</div>
+  <p style="color:#8a9ab5;font-size:12px;margin-bottom:12px">Runs the complete 10-section analysis for IBM with max_tokens: 8000. This is exactly what the main app does.</p>
+  <button class="btn" onclick="test4()">Run Test 4</button>
+  <div class="result pending" id="r4">Not run yet</div>
+</div>
+
+<script>
+
+function setResult(id, text, status) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'result ' + status;
+}
+
+// TEST 1 — just ping the endpoint
+async function test1() {
+  setResult('r1', 'Running...', 'pending');
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ test: true })
+    });
+    const text = await res.text();
+    if (res.status === 400 || res.status === 200) {
+      setResult('r1', '✅ Edge function IS reachable (HTTP ' + res.status + ')\n\nResponse: ' + text.slice(0, 300), 'ok');
+    } else if (res.status === 404) {
+      setResult('r1', '❌ EDGE FUNCTION NOT FOUND (404)\n\nThe analyze.js file is not deployed correctly.\n\nFix: Make sure netlify/edge-functions/analyze.js exists in your GitHub repo AND netlify.toml has the [[edge_functions]] section.', 'fail');
+    } else {
+      setResult('r1', '⚠️ HTTP ' + res.status + '\n\n' + text.slice(0, 400), 'warn');
+    }
+  } catch (err) {
+    setResult('r1', '❌ Network error: ' + err.message, 'fail');
+  }
+}
+
+// TEST 2 — minimal Anthropic call
+async function test2() {
+  setResult('r2', 'Running... (may take 5–10 seconds)', 'pending');
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 20,
+        messages: [{ role: 'user', content: 'Say the word OK.' }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setResult('r2', '❌ Anthropic returned HTTP ' + res.status + '\n\nError: ' + JSON.stringify(data, null, 2), 'fail');
+      return;
+    }
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    if (text) {
+      setResult('r2', '✅ API key works! Anthropic responded:\n\n"' + text + '"', 'ok');
+    } else {
+      setResult('r2', '⚠️ No text in response. Full response:\n\n' + JSON.stringify(data, null, 2), 'warn');
+    }
+  } catch (err) {
+    setResult('r2', '❌ Error: ' + err.message, 'fail');
+  }
+}
+
+// TEST 3 — short analysis
+async function test3() {
+  setResult('r3', 'Running... (may take 15–20 seconds)', 'pending');
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: 'Write a 3-sentence summary of IBM as a stock investment. Include a buy/hold/sell verdict.' }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setResult('r3', '❌ HTTP ' + res.status + '\n\n' + JSON.stringify(data, null, 2), 'fail');
+      return;
+    }
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    if (text) {
+      setResult('r3', '✅ Got analysis text (' + text.length + ' chars):\n\n' + text, 'ok');
+    } else {
+      setResult('r3', '⚠️ No text. stop_reason: ' + data.stop_reason + '\n\nFull response:\n' + JSON.stringify(data, null, 2), 'warn');
+    }
+  } catch (err) {
+    setResult('r3', '❌ Error: ' + err.message, 'fail');
+  }
+}
+
+// TEST 4 — full analysis
+async function test4() {
+  const t0 = Date.now();
+  setResult('r4', 'Running... watching the clock. Will show elapsed time when done.', 'pending');
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8000,
+        messages: [{ role: 'user', content: 'You are an expert stock analyst. Write a detailed 10-section investment report for IBM (ticker: IBM). Cover: 1) Executive Summary, 2) Company Overview, 3) Financials, 4) Valuation, 5) Growth Prospects, 6) Risks, 7) Technical Analysis, 8) Peer Comparison, 9) Catalysts, 10) Verdict with price target. Be specific with numbers.' }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setResult('r4', '❌ HTTP ' + res.status + '\n\nError: ' + JSON.stringify(data, null, 2), 'fail');
+      return;
+    }
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    if (text) {
+      const elapsed = ((Date.now() - t0)/1000).toFixed(1);
+      setResult('r4',
+        '✅ SUCCESS in ' + elapsed + 's! (' + text.length + ' chars, stop_reason: ' + data.stop_reason + ')\n\n' +
+        '--- FIRST 500 CHARS ---\n' + text.slice(0, 500) + '\n\n[... ' + Math.max(0, text.length - 500) + ' more chars ...]',
+        'ok'
+      );
+    } else {
+      setResult('r4', '⚠️ No text returned.\nstop_reason: ' + data.stop_reason + '\ncontent blocks: ' + (data.content || []).length + '\n\nFull:\n' + JSON.stringify(data, null, 2).slice(0, 600), 'warn');
+    }
+  } catch (err) {
+    setResult('r4', '❌ Error: ' + err.message + '\n\nThis may be a Netlify edge function timeout (26s limit). If tests 1-3 pass but test 4 fails, the prompt is too long.', 'fail');
+  }
+}
+</script>
+</body>
+</html>

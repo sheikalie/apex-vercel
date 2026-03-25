@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX · Free Beta — AI Stock Intelligence Terminal</title>
+<meta name="description" content="Get institutional-grade stock analysis powered by AI. Free during beta. Used by investors who are serious about their edge.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080a0d;
+    --bg2: #0d1018;
+    --bg3: #121620;
+    --border: #1c2333;
+    --border2: #242d42;
+    --gold: #c8a04a;
+    --gold2: #e8c870;
+    --gold-dim: #7a6028;
+    --gold-glow: rgba(200,160,74,0.1);
+    --gold-glow2: rgba(200,160,74,0.18);
+    --text: #eceae2;
+    --text2: #8a9ab8;
+    --text3: #4a566a;
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.08);
+    --red: #ef4444;
+    --blue: #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── AMBIENT BG ── */
+  .ambient {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .ambient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.07;
+  }
+
+  .orb1 { width: 700px; height: 700px; background: var(--gold); top: -200px; left: -200px; }
+  .orb2 { width: 500px; height: 500px; background: #3b82f6; bottom: 0; right: -100px; }
+  .orb3 { width: 400px; height: 400px; background: var(--gold); top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.04; }
+
+  /* Grid */
+  .ambient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,160,74,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,160,74,0.025) 1px, transparent 1px);
+    background-size: 80px 80px;
+  }
+
+  /* ── LAYOUT ── */
+  .wrap { position: relative; z-index: 1; }
+  .container { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── NAV ── */
+  nav {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+
+  .logo-gem {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--gold2), var(--gold-dim));
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+
+  .logo-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 20px; color: var(--gold); letter-spacing: 0.1em;
+  }
+
+  .beta-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 3px 9px;
+    background: var(--gold-glow);
+    border: 1px solid var(--gold-dim);
+    border-radius: 20px;
+    color: var(--gold);
+    margin-left: 4px;
+  }
+
+  .nav-cta {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .nav-link {
+    font-size: 13px; color: var(--text2);
+    text-decoration: none; transition: color 0.15s;
+  }
+
+  .nav-link:hover { color: var(--text); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 6px;
+    font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; text-decoration: none; transition: all 0.2s;
+    border: none;
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    color: #08090c;
+  }
+
+  .btn-gold:hover {
+    background: linear-gradient(135deg, var(--gold2), var(--gold));
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(200,160,74,0.3);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border2);
+    color: var(--text2);
+  }
+
+  .btn-outline:hover { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 100px 0 80px;
+    text-align: center;
+  }
+
+  .hero-kicker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold);
+    padding: 6px 16px;
+    background: var(--gold-glow);
+    border: 1px solid var(--gold-dim);
+    border-radius: 20px;
+    margin-bottom: 32px;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 2s infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .hero-h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(42px, 7vw, 80px);
+    line-height: 1.05;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  .hero-h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .hero-sub {
+    font-size: 17px; color: var(--text2);
+    max-width: 580px; margin: 0 auto 48px;
+    line-height: 1.8;
+  }
+
+  /* ── EMAIL FORM ── */
+  .hero-form-wrap {
+    max-width: 480px; margin: 0 auto 24px;
+  }
+
+  .hero-form {
+    display: flex; gap: 8px;
+    background: var(--bg2);
+    border: 1.5px solid var(--border2);
+    border-radius: 8px;
+    padding: 6px 6px 6px 18px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .hero-form:focus-within {
+    border-color: var(--gold-dim);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+  }
+
+  .hero-form input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-family: 'Sora', sans-serif; font-size: 14px;
+    color: var(--text);
+  }
+
+  .hero-form input::placeholder { color: var(--text3); }
+
+  .hero-cta-note {
+    font-size: 12px; color: var(--text3); text-align: center;
+  }
+
+  /* Success state */
+  .form-success {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    background: var(--green-bg);
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 8px;
+    margin-bottom: 24px;
+  }
+
+  .form-success-icon { font-size: 32px; margin-bottom: 8px; }
+  .form-success-title { font-size: 16px; font-weight: 600; color: var(--green); margin-bottom: 4px; }
+  .form-success-sub { font-size: 13px; color: var(--text2); }
+
+  /* ── SOCIAL PROOF ── */
+  .social-proof {
+    display: flex; align-items: center; justify-content: center; gap: 24px;
+    margin-top: 48px; flex-wrap: wrap;
+  }
+
+  .proof-stat {
+    text-align: center;
+  }
+
+  .proof-num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px; color: var(--gold); line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .proof-label { font-size: 12px; color: var(--text3); }
+
+  .proof-divider { width: 1px; height: 40px; background: var(--border); }
+
+  /* ── DEMO STRIP ── */
+  .demo-strip {
+    padding: 60px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .demo-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text3); text-align: center; margin-bottom: 32px;
+  }
+
+  .demo-window {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 760px;
+    margin: 0 auto;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  }
+
+  .demo-titlebar {
+    background: var(--bg3);
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tdot { width: 12px; height: 12px; border-radius: 50%; }
+  .tdot-r { background: #ff5f56; }
+  .tdot-y { background: #ffbd2e; }
+  .tdot-g { background: #27c93f; }
+
+  .demo-url {
+    flex: 1; margin-left: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--text3);
+  }
+
+  .demo-body { padding: 24px; }
+
+  .demo-ticker {
+    font-family: 'Instrument Serif', serif;
+    font-size: 48px; color: var(--gold); line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .demo-ts {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text3); margin-bottom: 20px;
+  }
+
+  .demo-sections { display: flex; flex-direction: column; gap: 8px; }
+
+  .demo-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .demo-row-icon { font-size: 16px; width: 24px; text-align: center; }
+
+  .demo-row-title {
+    font-size: 13px; font-weight: 600; color: var(--text); flex: 1;
+  }
+
+  .demo-row-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; padding: 2px 8px;
+    border-radius: 3px; letter-spacing: 0.05em;
+  }
+
+  .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+  .badge-gold { background: var(--gold-glow); color: var(--gold); border: 1px solid var(--gold-dim); }
+  .badge-blue { background: rgba(59,130,246,0.1); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
+
+  /* ── FEATURES ── */
+  .features { padding: 100px 0; }
+
+  .section-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold-dim); margin-bottom: 16px; text-align: center;
+  }
+
+  .section-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.15; font-weight: 400;
+    text-align: center; margin-bottom: 16px;
+  }
+
+  .section-sub {
+    font-size: 15px; color: var(--text2);
+    text-align: center; max-width: 500px; margin: 0 auto 60px;
+  }
+
+  .features-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  }
+
+  @media (max-width: 700px) { .features-grid { grid-template-columns: 1fr; } }
+
+  .feat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 24px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .feat-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
+
+  .feat-icon {
+    font-size: 28px; margin-bottom: 16px;
+    display: block;
+  }
+
+  .feat-title {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .feat-desc { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+  /* ── HOW IT WORKS ── */
+  .how { padding: 80px 0; border-top: 1px solid var(--border); }
+
+  .steps-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+    max-width: 760px; margin: 0 auto; position: relative;
+  }
+
+  .steps-row::before {
+    content: '';
+    position: absolute;
+    top: 28px; left: calc(16.6% + 8px); right: calc(16.6% + 8px);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border2), transparent);
+  }
+
+  .how-step { text-align: center; padding: 0 16px; }
+
+  .how-step-num {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--bg2); border: 1.5px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px; color: var(--gold);
+    margin: 0 auto 16px;
+  }
+
+  .how-step-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .how-step-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+  /* ── BETA PERKS ── */
+  .perks {
+    padding: 80px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .perks-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    max-width: 680px; margin: 0 auto;
+  }
+
+  @media (max-width: 600px) { .perks-grid { grid-template-columns: 1fr; } }
+
+  .perk-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .perk-icon { font-size: 20px; flex-shrink: 0; }
+  .perk-text { font-size: 14px; color: var(--text2); }
+  .perk-text strong { color: var(--text); }
+
+  /* ── FINAL CTA ── */
+  .final-cta {
+    padding: 100px 0;
+    text-align: center;
+    border-top: 1px solid var(--border);
+  }
+
+  .final-cta .hero-h1 { font-size: clamp(32px, 5vw, 56px); margin-bottom: 16px; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+
+  .footer-disc {
+    font-size: 11px; color: var(--text3); max-width: 600px; line-height: 1.6;
+  }
+
+  .footer-right { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); }
+
+  /* ── TICKER CRAWL ── */
+  .ticker-crawl {
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .crawl-track {
+    display: flex; gap: 40px;
+    animation: crawl 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes crawl {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .crawl-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text3);
+    display: flex; align-items: center; gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .crawl-item .up { color: var(--green); }
+  .crawl-item .dn { color: var(--red); }
+
+  /* ── HIDDEN NETLIFY FORM (for capturing) ── */
+  .netlify-hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Ambient background -->
+<div class="ambient">
+  <div class="ambient-orb orb1"></div>
+  <div class="ambient-orb orb2"></div>
+  <div class="ambient-orb orb3"></div>
+</div>
+
+<!-- Hidden Netlify form for beta signups -->
+<form name="beta-signup" netlify netlify-honeypot="bot-field" class="netlify-hidden">
+  <input name="bot-field">
+  <input name="email">
+  <input name="name">
+</form>
+
+<div class="wrap">
+
+  <!-- TICKER CRAWL -->
+  <div class="ticker-crawl">
+    <div class="crawl-track" id="crawl">
+      <span class="crawl-item">NVDA <span class="up">+3.2%</span></span>
+      <span class="crawl-item">AAPL <span class="dn">-0.8%</span></span>
+      <span class="crawl-item">MSFT <span class="up">+1.4%</span></span>
+      <span class="crawl-item">PLTR <span class="up">+5.1%</span></span>
+      <span class="crawl-item">TSLA <span class="dn">-2.3%</span></span>
+      <span class="crawl-item">AMZN <span class="up">+0.9%</span></span>
+      <span class="crawl-item">META <span class="up">+2.7%</span></span>
+      <span class="crawl-item">GOOGL <span class="up">+1.1%</span></span>
+      <span class="crawl-item">COIN <span class="dn">-4.2%</span></span>
+      <span class="crawl-item">RXRX <span class="up">+8.3%</span></span>
+      <span class="crawl-item">IBM <span class="up">+0.6%</span></span>
+      <span class="crawl-item">RKLB <span class="up">+6.4%</span></span>
+      <!-- Duplicate for seamless loop -->
+      <span class="crawl-item">NVDA <span class="up">+3.2%</span></span>
+      <span class="crawl-item">AAPL <span class="dn">-0.8%</span></span>
+      <span class="crawl-item">MSFT <span class="up">+1.4%</span></span>
+      <span class="crawl-item">PLTR <span class="up">+5.1%</span></span>
+      <span class="crawl-item">TSLA <span class="dn">-2.3%</span></span>
+      <span class="crawl-item">AMZN <span class="up">+0.9%</span></span>
+      <span class="crawl-item">META <span class="up">+2.7%</span></span>
+      <span class="crawl-item">GOOGL <span class="up">+1.1%</span></span>
+      <span class="crawl-item">COIN <span class="dn">-4.2%</span></span>
+      <span class="crawl-item">RXRX <span class="up">+8.3%</span></span>
+      <span class="crawl-item">IBM <span class="up">+0.6%</span></span>
+      <span class="crawl-item">RKLB <span class="up">+6.4%</span></span>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <div class="nav-logo">
+          <div class="logo-gem"></div>
+          <span class="logo-name">APEX</span>
+          <span class="beta-pill">BETA</span>
+        </div>
+        <div class="nav-cta">
+          <a href="index.html" class="nav-link">Try it now →</a>
+          <a href="#signup" class="btn btn-gold">Join Free Beta</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-kicker">
+        <div class="live-dot"></div>
+        Free Beta · Limited Access
+      </div>
+
+      <h1 class="hero-h1">
+        Institutional-grade<br>
+        stock analysis. <em>For everyone.</em>
+      </h1>
+
+      <p class="hero-sub">
+        APEX combines the rigor of a PE fund manager, McKinsey strategic frameworks, and quantitative factor research — synthesized by AI in under 60 seconds. Free during beta.
+      </p>
+
+      <!-- SIGNUP FORM -->
+      <div id="signup" class="hero-form-wrap">
+        <div id="signup-form-container">
+          <form class="hero-form" id="beta-form" onsubmit="submitBeta(event)">
+            <input type="email" name="email" placeholder="your@email.com" required>
+            <button type="submit" class="btn btn-gold" id="signup-btn">Get Free Access →</button>
+          </form>
+        </div>
+        <div class="form-success" id="signup-success">
+          <div class="form-success-icon">🎯</div>
+          <div class="form-success-title">You're in the beta!</div>
+          <div class="form-success-sub">Access the tool now — no password needed during beta.</div>
+          <br>
+          <a href="index.html" class="btn btn-gold" style="margin-top:4px">Open APEX Terminal →</a>
+        </div>
+        <p class="hero-cta-note" id="cta-note" style="margin-top:12px">No credit card. No password. Just click and analyze.</p>
+      </div>
+
+      <!-- SOCIAL PROOF -->
+      <div class="social-proof">
+        <div class="proof-stat">
+          <div class="proof-num">10</div>
+          <div class="proof-label">Analytical Dimensions</div>
+        </div>
+        <div class="proof-divider"></div>
+        <div class="proof-stat">
+          <div class="proof-num">&lt;60s</div>
+          <div class="proof-label">Per Full Report</div>
+        </div>
+        <div class="proof-divider"></div>
+        <div class="proof-stat">
+          <div class="proof-num">Free</div>
+          <div class="proof-label">During Beta</div>
+        </div>
+        <div class="proof-divider"></div>
+        <div class="proof-stat">
+          <div class="proof-num">∞</div>
+          <div class="proof-label">Tickers Supported</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO WINDOW -->
+  <section class="demo-strip">
+    <div class="container">
+      <div class="demo-label">What a report looks like</div>
+      <div class="demo-window">
+        <div class="demo-titlebar">
+          <div class="tdot tdot-r"></div><div class="tdot tdot-y"></div><div class="tdot tdot-g"></div>
+          <div class="demo-url">apex-terminal.netlify.app · Analysis Report</div>
+        </div>
+        <div class="demo-body">
+          <div class="demo-ticker">NVDA</div>
+          <div class="demo-ts">Analysis generated · March 2025 · APEX Intelligence</div>
+          <div class="demo-sections">
+            <div class="demo-row"><span class="demo-row-icon">🎯</span><span class="demo-row-title">Executive Summary</span><span class="demo-row-badge badge-green">COMPOSITE 24/30</span></div>
+            <div class="demo-row"><span class="demo-row-icon">📊</span><span class="demo-row-title">Financial Fundamentals</span><span class="demo-row-badge badge-gold">SCORE 9/10</span></div>
+            <div class="demo-row"><span class="demo-row-icon">🌊</span><span class="demo-row-title">Capital Flow & Institutional Intelligence</span><span class="demo-row-badge badge-blue">FLOWS</span></div>
+            <div class="demo-row"><span class="demo-row-icon">📈</span><span class="demo-row-title">Technical & Quantitative Analysis</span><span class="demo-row-badge badge-gold">ASCENDING</span></div>
+            <div class="demo-row"><span class="demo-row-icon">🎲</span><span class="demo-row-title">Trading Strategy & Probability</span><span class="demo-row-badge badge-green">68% / 30d</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="container">
+      <div class="section-eyebrow">What's inside every report</div>
+      <h2 class="section-title">Six years of financial training.<br>Delivered in one minute.</h2>
+      <p class="section-sub">Each APEX report fuses five distinct analytical schools that normally require a team of specialists.</p>
+      <div class="features-grid">
+        <div class="feat-card">
+          <span class="feat-icon">📊</span>
+          <div class="feat-title">Fundamental Scorecard</div>
+          <div class="feat-desc">EPS growth, PE/PEG ratios, ROE, free cash flow, debt analysis — scored /10 with specific numbers pulled from live SEC filings.</div>
+        </div>
+        <div class="feat-card">
+          <span class="feat-icon">🌊</span>
+          <div class="feat-title">Institutional Flow Intelligence</div>
+          <div class="feat-desc">Net institutional inflow/outflow, insider buying patterns, short interest trends, and analyst consensus target prices.</div>
+        </div>
+        <div class="feat-card">
+          <span class="feat-icon">📈</span>
+          <div class="feat-title">Technical & Quant Analysis</div>
+          <div class="feat-desc">MACD, RSI, Bollinger Bands, support/resistance levels, volume structure, and quantitative momentum/quality/value factor scores.</div>
+        </div>
+        <div class="feat-card">
+          <span class="feat-icon">⚡</span>
+          <div class="feat-title">Catalyst Intelligence</div>
+          <div class="feat-desc">Policy tailwinds, upcoming earnings, product launches, M&A activity, and the top stock-moving events of the past 12 months.</div>
+        </div>
+        <div class="feat-card">
+          <span class="feat-icon">🎲</span>
+          <div class="feat-title">Trading Strategy & Probability</div>
+          <div class="feat-desc">30/90/180-day return probabilities, price targets (short & medium-term), entry zones, iron stop-loss level, and position sizing.</div>
+        </div>
+        <div class="feat-card">
+          <span class="feat-icon">⚔️</span>
+          <div class="feat-title">McKinsey-Style Peer Comparison</div>
+          <div class="feat-desc">Head-to-head vs. 3–4 direct competitors across all key metrics. Sector rotation status. 80/20 value driver identification.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <div class="container">
+      <div class="section-eyebrow">How it works</div>
+      <h2 class="section-title" style="margin-bottom:52px">Three steps. One report.</h2>
+      <div class="steps-row">
+        <div class="how-step">
+          <div class="how-step-num">1</div>
+          <div class="how-step-title">Enter any ticker</div>
+          <div class="how-step-desc">Type any U.S. stock symbol — large cap, small cap, ETF, crypto proxy.</div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-num">2</div>
+          <div class="how-step-title">AI runs the analysis</div>
+          <div class="how-step-desc">APEX searches live data, SEC filings, news, and market feeds in real time.</div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-num">3</div>
+          <div class="how-step-title">Read your report</div>
+          <div class="how-step-desc">10 structured sections. Scores. Tables. Probabilities. Copy or share it.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BETA PERKS -->
+  <section class="perks">
+    <div class="container">
+      <div class="section-eyebrow">Beta tester benefits</div>
+      <h2 class="section-title" style="margin-bottom: 40px">Why join now?</h2>
+      <div class="perks-grid">
+        <div class="perk-row"><span class="perk-icon">🆓</span><div class="perk-text"><strong>Completely free</strong> during the entire beta period</div></div>
+        <div class="perk-row"><span class="perk-icon">🔓</span><div class="perk-text"><strong>Unlimited analyses</strong> — no daily caps or limits</div></div>
+        <div class="perk-row"><span class="perk-icon">🎁</span><div class="perk-text"><strong>Founding member pricing</strong> locked in when we launch paid tiers</div></div>
+        <div class="perk-row"><span class="perk-icon">🗣</span><div class="perk-text"><strong>Your feedback shapes</strong> the product roadmap directly</div></div>
+        <div class="perk-row"><span class="perk-icon">⚡</span><div class="perk-text"><strong>Instant access</strong> — no waitlist, no approval needed</div></div>
+        <div class="perk-row"><span class="perk-icon">📬</span><div class="perk-text"><strong>Early access</strong> to every new feature before public release</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final-cta">
+    <div class="container">
+      <h2 class="hero-h1">
+        Ready to analyze<br>like a <em>fund manager?</em>
+      </h2>
+      <p class="hero-sub" style="margin-bottom:36px">Free during beta. No credit card. Works on any device.</p>
+      <a href="index.html" class="btn btn-gold" style="font-size:16px;padding:14px 32px">
+        Open APEX Terminal →
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <p class="footer-disc">⚠️ APEX is an AI-powered research tool. All outputs are for informational purposes only and do not constitute financial advice, investment recommendations, or solicitation to buy or sell securities. Always consult a licensed financial advisor. Past performance is not indicative of future results.</p>
+        <div class="footer-right">APEX · Beta</div>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+async function submitBeta(e) {
+  e.preventDefault();
+  const btn = document.getElementById('signup-btn');
+  btn.textContent = 'Joining...';
+  btn.disabled = true;
+
+  const email = e.target.email.value;
+
+  // Submit to Netlify Forms
+  try {
+    await fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        'form-name': 'beta-signup',
+        email
+      }).toString()
+    });
+  } catch (_) { /* fail silently — still show success */ }
+
+  // Show success state
+  document.getElementById('signup-form-container').style.display = 'none';
+  document.getElementById('cta-note').style.display = 'none';
+  document.getElementById('signup-success').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
