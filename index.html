@@ -655,21 +655,23 @@
 </div>
 
 <script>
-// ─── STATE ────────────────────────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────────────────────────────
 let currentTicker = '';
 let fullReportText = '';
+let selectedRating = 0;
+let selectedTags = [];
 
-// ─── MASTER PROMPT ────────────────────────────────────────────────────────────
+// ── PROMPT ────────────────────────────────────────────────────────────────────
 function buildPrompt(ticker) {
-  return `You are an elite stock analyst. Produce a concise but rigorous 10-section investment report for **${ticker}**. Use your training knowledge. Be specific with numbers where you know them. Use markdown headers (##), bullets, and tables.
+  return `You are an elite stock analyst. Produce a rigorous 10-section investment report for **${ticker}**. Use markdown headers (##), bullets, and tables throughout.
 
 ## 🎯 1. Executive Summary
-- Investment thesis in 2–3 sentences
+- Investment thesis in 2-3 sentences
 - **Composite Score:** X/30 | **Conviction:** HIGH / MEDIUM / LOW / AVOID
 - **Verdict (≤12 words):**
 
 ## 🏢 2. Company Overview
-- Business model, moat, key revenue drivers (3–4 bullets)
+- Business model, moat, key revenue drivers (3-4 bullets)
 - Top strategic priority right now
 
 ## ⚔️ 3. Peer Comparison
@@ -680,13 +682,13 @@ function buildPrompt(ticker) {
 | Op Margin | | | |
 
 ## 📊 4. Financial Fundamentals (Score: X/10)
-- EPS growth forecast, PE/PEG, ROE, FCF, debt ratio (5 bullets with numbers)
+- EPS growth forecast, PE/PEG, ROE, FCF, debt ratio — 5 bullets with numbers
 
 ## 🌊 5. Institutional & Sentiment
-- Institutional ownership trend, insider activity, short interest, analyst consensus (4 bullets)
+- Institutional ownership trend, insider activity, short interest, analyst consensus
 
 ## 📈 6. Technical Analysis
-- Trend structure, key support/resistance, RSI/MACD state, volume (4 bullets)
+- Trend structure, key support/resistance, RSI/MACD state, volume
 
 ## ⚡ 7. Catalysts
 - Top 3 upcoming catalysts with expected impact
@@ -695,7 +697,7 @@ function buildPrompt(ticker) {
 - Top 3 risks with severity (High/Med/Low) and iron stop-loss price
 
 ## 🎲 9. Trading Strategy
-- 30d / 90d upside probability (%), price target range, position size recommendation, entry zone
+- 30d / 90d upside probability (%), price target range, position size, entry zone
 
 ## 📋 10. Scorecard
 | Dimension | Score | Rationale |
@@ -709,31 +711,17 @@ function buildPrompt(ticker) {
 | **TOTAL** | **X/30** | |`;
 }
 
-// ─── SECTION DEFINITIONS ─────────────────────────────────────────────────────
-const SECTION_DEFS = [
-  { emoji: '🎯', title: 'Executive Summary', badge: 'OVERVIEW' },
-  { emoji: '🏢', title: 'Company Overview & Strategic Context', badge: 'STRATEGY' },
-  { emoji: '⚔️', title: 'Peer & Sector Comparison', badge: 'COMPETITIVE' },
-  { emoji: '📊', title: 'Financial Fundamentals', badge: 'FUNDAMENTALS' },
-  { emoji: '🌊', title: 'Capital Flow & Institutional Intelligence', badge: 'FLOWS' },
-  { emoji: '📈', title: 'Technical & Quantitative Analysis', badge: 'TECHNICALS' },
-  { emoji: '⚡', title: 'Catalysts & Policy Tailwinds', badge: 'CATALYSTS' },
-  { emoji: '⚠️', title: 'Risks & Mitigation', badge: 'RISK' },
-  { emoji: '🎲', title: 'Trading Strategy & Probability', badge: 'STRATEGY' },
-  { emoji: '📋', title: 'Investment Scorecard', badge: 'SCORECARD' },
-];
-
-// ─── UTILITIES ────────────────────────────────────────────────────────────────
+// ── UI HELPERS ────────────────────────────────────────────────────────────────
 function setTicker(t) {
   document.getElementById('ticker-input').value = t;
   document.getElementById('ticker-input').focus();
 }
 
 function setState(s) {
-  document.getElementById('loading-state').style.display  = s === 'loading'  ? 'block' : 'none';
+  document.getElementById('loading-state').style.display     = s === 'loading' ? 'block' : 'none';
   document.getElementById('results-container').style.display = s === 'results' ? 'block' : 'none';
-  document.getElementById('error-state').style.display   = s === 'error'   ? 'block' : 'none';
-  document.getElementById('dimensions-grid').style.display = s === 'idle'  ? 'grid'  : 'none';
+  document.getElementById('error-state').style.display       = s === 'error'   ? 'block' : 'none';
+  document.getElementById('dimensions-grid').style.display   = s === 'idle'    ? 'grid'  : 'none';
 }
 
 function resetApp() {
@@ -742,27 +730,39 @@ function resetApp() {
   document.getElementById('ticker-input').focus();
 }
 
-function collapseAll() { document.querySelectorAll('.section-card').forEach(c => c.classList.add('collapsed')); }
-function expandAll()   { document.querySelectorAll('.section-card').forEach(c => c.classList.remove('collapsed')); }
+function collapseAll() {
+  document.querySelectorAll('.section-card').forEach(c => c.classList.add('collapsed'));
+}
+
+function expandAll() {
+  document.querySelectorAll('.section-card').forEach(c => c.classList.remove('collapsed'));
+}
 
 async function copyReport() {
   if (fullReportText) {
-    await navigator.clipboard.writeText(`APEX Investment Intelligence Report — ${currentTicker}\n\n${fullReportText}`);
+    await navigator.clipboard.writeText('APEX Investment Intelligence Report — ' + currentTicker + '\n\n' + fullReportText);
     const btn = event.target;
+    const orig = btn.textContent;
     btn.textContent = '✓ Copied!';
-    setTimeout(() => btn.textContent = 'Copy Report', 2000);
+    setTimeout(() => btn.textContent = orig, 2000);
   }
 }
 
+function toggleSection(card) {
+  card.classList.toggle('collapsed');
+}
+
+// ── MARKDOWN RENDERER ─────────────────────────────────────────────────────────
 function renderMarkdown(text) {
+  if (!text) return '';
   return text
     .replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, (_, header, rows) => {
-      const ths = header.split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('');
+      const ths = header.split('|').filter(c => c.trim()).map(c => '<th>' + c.trim() + '</th>').join('');
       const trs = rows.trim().split('\n').map(row => {
-        const tds = row.split('|').filter(c => c.trim()).map(c => `<td>${c.trim()}</td>`).join('');
-        return `<tr>${tds}</tr>`;
+        const tds = row.split('|').filter(c => c.trim()).map(c => '<td>' + c.trim() + '</td>').join('');
+        return '<tr>' + tds + '</tr>';
       }).join('');
-      return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+      return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table>';
     })
     .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
@@ -773,17 +773,39 @@ function renderMarkdown(text) {
     .replace(/`(.+?)`/g, '<code>$1</code>')
     .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:16px 0">')
     .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+    .replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m + '</ul>')
     .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
     .replace(/\n\n/g, '</p><p>')
-    .replace(/^([^<\n].+)$/gm, m => m.startsWith('<') || !m.trim() ? m : `<p>${m}</p>`);
+    .replace(/^([^<\n].+)$/gm, m => (!m.trim() || m.startsWith('<')) ? m : '<p>' + m + '</p>');
+}
+
+// ── SECTION PARSER ────────────────────────────────────────────────────────────
+const SECTION_DEFS = [
+  { emoji: '🎯', title: 'Executive Summary',                     badge: 'OVERVIEW'     },
+  { emoji: '🏢', title: 'Company Overview & Strategic Context',  badge: 'STRATEGY'     },
+  { emoji: '⚔️', title: 'Peer & Sector Comparison',              badge: 'COMPETITIVE'  },
+  { emoji: '📊', title: 'Financial Fundamentals',                badge: 'FUNDAMENTALS' },
+  { emoji: '🌊', title: 'Capital Flow & Institutional',          badge: 'FLOWS'        },
+  { emoji: '📈', title: 'Technical & Quantitative Analysis',     badge: 'TECHNICALS'   },
+  { emoji: '⚡', title: 'Catalysts & Policy',                    badge: 'CATALYSTS'    },
+  { emoji: '⚠️', title: 'Risks & Mitigation',                    badge: 'RISK'         },
+  { emoji: '🎲', title: 'Trading Strategy',                      badge: 'STRATEGY'     },
+  { emoji: '📋', title: 'Investment Scorecard',                  badge: 'SCORECARD'    },
+];
+
+function matchDef(heading) {
+  const h = heading.replace(/[^\w\s&]/gu, '').trim().toLowerCase();
+  for (const def of SECTION_DEFS) {
+    const d = def.title.toLowerCase();
+    if (h.includes(d.slice(0, 8)) || d.includes(h.slice(0, 8))) return def;
+  }
+  return { emoji: '📌', title: heading.replace(/^\d+\.\s*/, '').replace(/[^\w\s&]/gu, '').trim(), badge: 'SECTION' };
 }
 
 function parseSections(text) {
   const sections = [];
-  const lines = text.split('\n');
   let current = null;
-  for (const line of lines) {
+  for (const line of text.split('\n')) {
     const h2 = line.match(/^##\s+(.+)$/);
     if (h2) {
       if (current) sections.push(current);
@@ -796,43 +818,28 @@ function parseSections(text) {
   return sections;
 }
 
-function matchSectionDef(heading) {
-  for (const def of SECTION_DEFS) {
-    const a = heading.replace(/[^\w\s&]/gu, '').trim().toLowerCase();
-    const b = def.title.toLowerCase();
-    if (a.includes(b.slice(0, 8)) || b.includes(a.slice(0, 8))) return def;
-  }
-  return null;
-}
-
 function buildSectionCards(sections) {
   const layout = document.getElementById('sections-layout');
   layout.innerHTML = '';
   sections.forEach((section, i) => {
-    const def = matchSectionDef(section.heading) || {
-      emoji: '📌',
-      title: section.heading.replace(/^\d+\.\s*/, '').replace(/[^\w\s&]/gu, '').trim(),
-      badge: 'SECTION'
-    };
+    const def = matchDef(section.heading);
     const card = document.createElement('div');
     card.className = 'section-card' + (i > 0 ? ' collapsed' : '');
-    card.innerHTML = `
-      <div class="section-header" onclick="toggleSection(this.parentElement)">
-        <div class="section-title-row">
-          <span class="section-icon">${def.emoji}</span>
-          <span class="section-title">${def.title}</span>
-          <span class="section-badge">${def.badge}</span>
-        </div>
-        <span class="section-chevron">▾</span>
-      </div>
-      <div class="section-body">${renderMarkdown(section.content.join('\n'))}</div>`;
+    card.innerHTML =
+      '<div class="section-header" onclick="toggleSection(this.parentElement)">' +
+        '<div class="section-title-row">' +
+          '<span class="section-icon">' + def.emoji + '</span>' +
+          '<span class="section-title">' + def.title + '</span>' +
+          '<span class="section-badge">' + def.badge + '</span>' +
+        '</div>' +
+        '<span class="section-chevron">▾</span>' +
+      '</div>' +
+      '<div class="section-body">' + renderMarkdown(section.content.join('\n')) + '</div>';
     layout.appendChild(card);
   });
 }
 
-function toggleSection(card) { card.classList.toggle('collapsed'); }
-
-// ─── MAIN ANALYSIS ────────────────────────────────────────────────────────────
+// ── MAIN ANALYSIS ─────────────────────────────────────────────────────────────
 async function runAnalysis() {
   const raw = document.getElementById('ticker-input').value.trim().toUpperCase();
   if (!raw) return;
@@ -847,7 +854,6 @@ async function runAnalysis() {
   setState('loading');
 
   try {
-    // ── Call our secure proxy — API key never touches the browser ──────────────
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -858,33 +864,22 @@ async function runAnalysis() {
       })
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${response.status}`);
+      throw new Error(data.error?.message || 'HTTP ' + response.status);
     }
 
-    const data = await response.json();
-    // Collect all text blocks (web search results come back inline with text)
     fullReportText = (data.content || [])
       .filter(b => b.type === 'text')
       .map(b => b.text)
       .join('\n\n');
 
-    // If no text blocks but we have tool_result blocks, the search ran but model didn't respond
     if (!fullReportText.trim()) {
-      const hasToolUse = (data.content || []).some(b => b.type === 'tool_use' || b.type === 'tool_result');
-      if (hasToolUse) {
-        throw new Error('Analysis started but produced no text output. Try again — this is usually a one-time timeout.');
-      }
-      const stopReason = data.stop_reason || 'unknown';
-      throw new Error('No content returned (stop_reason: ' + stopReason + '). Check your API key has billing enabled at console.anthropic.com');
+      throw new Error('No content in response. stop_reason: ' + (data.stop_reason || 'unknown'));
     }
 
-    // If response was cut short, still show what we got
-    if (data.stop_reason === 'max_tokens') {
-      fullReportText += '\n\n---\n*Note: Report was trimmed due to length. The analysis above is complete through the sections shown.*';
-    }
-
+    // Render results
     document.getElementById('results-ticker-label').textContent = raw;
     document.getElementById('results-timestamp').textContent =
       new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) + ' · APEX Intelligence';
@@ -893,69 +888,24 @@ async function runAnalysis() {
     if (sections.length > 0) {
       buildSectionCards(sections);
     } else {
-      document.getElementById('sections-layout').innerHTML = `
-        <div class="section-card">
-          <div class="section-header" onclick="toggleSection(this.parentElement)">
-            <div class="section-title-row">
-              <span class="section-icon">📋</span>
-              <span class="section-title">Full Analysis Report</span>
-              <span class="section-badge">COMPLETE</span>
-            </div>
-            <span class="section-chevron">▾</span>
-          </div>
-          <div class="section-body raw-content">${fullReportText}</div>
-        </div>`;
+      document.getElementById('sections-layout').innerHTML =
+        '<div class="section-card">' +
+          '<div class="section-header" onclick="toggleSection(this.parentElement)">' +
+            '<div class="section-title-row">' +
+              '<span class="section-icon">📋</span>' +
+              '<span class="section-title">Full Analysis Report</span>' +
+              '<span class="section-badge">COMPLETE</span>' +
+            '</div>' +
+            '<span class="section-chevron">▾</span>' +
+          '</div>' +
+          '<div class="section-body raw-content">' + fullReportText.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' +
+        '</div>';
     }
 
     setState('results');
 
-    // Reset feedback widget — wrapped in its own try/catch
-    // so any DOM error here CANNOT wipe out the results display
-    try {
-      selectedRating = 0; selectedTags = [];
-      const fbody = document.getElementById('feedback-form-body');
-      const fsuccess = document.getElementById('feedback-success');
-      const fwidget = document.getElementById('feedback-widget');
-      const fcomment = document.getElementById('feedback-comment');
-      const femail = document.getElementById('feedback-email');
-      const fsb = document.getElementById('feedback-submit-btn');
-      if (fbody) fbody.style.display = 'block';
-      if (fsuccess) fsuccess.style.display = 'none';
-      if (fcomment) fcomment.value = '';
-      if (femail) femail.value = '';
-      if (fsb) { fsb.disabled = false; fsb.textContent = 'Send Feedback →'; }
-      document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.feedback-tag').forEach(t => t.classList.remove('selected'));
-      if (fwidget) { fwidget.style.display = 'none'; setTimeout(showFeedback, 1400); }
-    } catch (_) { /* feedback reset failed silently — results still shown */ }
-
   } catch (err) {
-    const msg = err.message || 'Unknown error';
-    document.getElementById('error-msg').textContent = msg;
-
-    // Show contextual hints based on error type
-    const hints = document.getElementById('error-hints');
-    hints.innerHTML = '';
-    const hintStyle = 'padding:10px 14px;border-radius:5px;font-size:12px;line-height:1.6;';
-
-    if (msg.includes('401') || msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('authentication')) {
-      hints.innerHTML = '<div style="' + hintStyle + 'background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);color:#f39c12">' +
-        '<strong>API Key Issue:</strong> Go to <strong>Netlify → Site configuration → Environment variables</strong> and confirm <code>ANTHROPIC_API_KEY</code> is set correctly, then trigger a new deploy.' +
-        '</div>';
-    } else if (msg.includes('402') || msg.toLowerCase().includes('billing') || msg.toLowerCase().includes('credit')) {
-      hints.innerHTML = '<div style="' + hintStyle + 'background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);color:#f39c12">' +
-        '<strong>Billing Issue:</strong> Your Anthropic account needs a payment method. Go to <strong>console.anthropic.com → Billing</strong> and add a credit card.' +
-        '</div>';
-    } else if (msg.includes('500') || msg.includes('502') || msg.includes('529')) {
-      hints.innerHTML = '<div style="' + hintStyle + 'background:rgba(58,123,213,0.1);border:1px solid rgba(58,123,213,0.3);color:#5a9bd8">' +
-        '<strong>Temporary Error:</strong> Anthropic's servers may be busy. Wait 30 seconds and try again. If it persists, check <strong>status.anthropic.com</strong>.' +
-        '</div>';
-    } else if (msg.includes('model')) {
-      hints.innerHTML = '<div style="' + hintStyle + 'background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);color:#f39c12">' +
-        '<strong>Model Error:</strong> The model name may be outdated. This has been fixed in the latest file update — re-upload <code>index.html</code> to GitHub.' +
-        '</div>';
-    }
-
+    document.getElementById('error-msg').textContent = err.message || 'Unknown error';
     setState('error');
   } finally {
     btn.disabled = false;
@@ -963,29 +913,22 @@ async function runAnalysis() {
   }
 }
 
-document.getElementById('ticker-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') runAnalysis();
-});
-
-// ─── FEEDBACK WIDGET ─────────────────────────────────────────────────────────
-let selectedRating = 0;
-let selectedTags = [];
-
+// ── FEEDBACK ──────────────────────────────────────────────────────────────────
 function showFeedback() {
   const w = document.getElementById('feedback-widget');
-  w.style.display = 'block';
-  w.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (w) { w.style.display = 'block'; w.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 }
 
 function skipFeedback() {
-  document.getElementById('feedback-widget').style.display = 'none';
+  const w = document.getElementById('feedback-widget');
+  if (w) w.style.display = 'none';
 }
 
 function setStar(n) {
   selectedRating = n;
   for (let i = 1; i <= 5; i++) {
     const s = document.getElementById('star-' + i);
-    s.classList.toggle('active', i <= n);
+    if (s) s.classList.toggle('active', i <= n);
   }
 }
 
@@ -1001,30 +944,32 @@ function toggleTag(el) {
 
 async function submitFeedback() {
   const btn = document.getElementById('feedback-submit-btn');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-
-  const payload = {
-    'form-name': 'apex-feedback',
-    ticker: currentTicker,
-    rating: selectedRating ? String(selectedRating) + '/5' : 'Not rated',
-    tags: selectedTags.join(', ') || 'None selected',
-    comment: document.getElementById('feedback-comment').value || '',
-    email: document.getElementById('feedback-email').value || '',
-    timestamp: new Date().toISOString(),
-  };
-
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
   try {
     await fetch('/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(payload).toString(),
+      body: new URLSearchParams({
+        'form-name': 'apex-feedback',
+        ticker: currentTicker,
+        rating: selectedRating ? selectedRating + '/5' : 'Not rated',
+        tags: selectedTags.join(', ') || 'None',
+        comment: (document.getElementById('feedback-comment') || {}).value || '',
+        email: (document.getElementById('feedback-email') || {}).value || '',
+        timestamp: new Date().toISOString(),
+      }).toString()
     });
-  } catch (_) { /* fail silently */ }
-
-  document.getElementById('feedback-form-body').style.display = 'none';
-  document.getElementById('feedback-success').style.display = 'block';
+  } catch (_) {}
+  const fbody = document.getElementById('feedback-form-body');
+  const fsuccess = document.getElementById('feedback-success');
+  if (fbody) fbody.style.display = 'none';
+  if (fsuccess) fsuccess.style.display = 'block';
 }
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.getElementById('ticker-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runAnalysis();
+});
 </script>
 </body>
 </html>
